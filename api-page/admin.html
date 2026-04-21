@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XTE Admin</title>
+    <link rel="icon" href="/src/icon.png" type="image/png">
+    <!-- Early guard -->
+    <script>
+        (function() {
+            try {
+                const token = localStorage.getItem('xte-token');
+                if (!token) { window.location.replace('/auth?redirect=/admin'); return; }
+                const b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+                const padded = b64 + '=='.slice(0, (4 - b64.length % 4) % 4);
+                const p = JSON.parse(decodeURIComponent(escape(atob(padded))));
+                if (!p.exp || p.exp * 1000 <= Date.now()) { window.location.replace('/auth?redirect=/admin'); return; }
+                if (p.email !== 'defandryannn@gmail.com') { window.location.replace('/'); }
+            } catch(e) { window.location.replace('/auth?redirect=/admin'); }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #e8611a; --orange-dim: #fde8d8; --orange-lt: #f5905a;
+            --bg: #f8f7f4; --surface: #ffffff; --border: #e8e4de;
+            --text: #1c1917; --text-2: #6b6460; --text-3: #a8a29e;
+            --radius: 12px; --radius-sm: 8px;
+        }
+        [data-theme="dark"] {
+            --orange-dim: #2a1a0e; --bg: #0f0e0d; --surface: #1a1917;
+            --border: #2e2b28; --text: #f5f0eb; --text-2: #a89e96; --text-3: #6b6460;
+        }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; margin: 0; min-height: 100vh; }
+        ::-webkit-scrollbar { display: none !important; }
+
+        /* Header */
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .header-logo { display: flex; align-items: center; gap: 10px; }
+        .logo-box { width: 32px; height: 32px; background: var(--orange); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .admin-badge { background: var(--orange); color: #fff; font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; letter-spacing: .08em; text-transform: uppercase; }
+
+        /* Stat cards */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 20px 18px; display: flex; flex-direction: column; gap: 6px;
+        }
+        .stat-card .label { font-size: 0.7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+        .stat-card .value { font-size: 1.9rem; font-weight: 700; color: var(--orange); font-family: 'JetBrains Mono', monospace; line-height: 1; }
+        .stat-card .sub { font-size: 0.72rem; color: var(--text-3); }
+
+        /* Section */
+        .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; }
+        .section-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .section-title { font-size: 0.78rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: .06em; display: flex; align-items: center; gap: 8px; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; }
+        th { font-size: 0.68rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); background: var(--bg); }
+        td { font-size: 0.78rem; color: var(--text-2); padding: 11px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--bg); }
+        .mono { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; }
+
+        /* Badges */
+        .badge-verified { background: #dcfce7; color: #16a34a; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+        .badge-unverified { background: #fef9c3; color: #ca8a04; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 100px; }
+        [data-theme="dark"] .badge-verified { background: #14532d; color: #86efac; }
+        [data-theme="dark"] .badge-unverified { background: #422006; color: #fde68a; }
+
+        /* Top users bar */
+        .top-user { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+        .top-user:last-child { border-bottom: none; }
+        .top-user .rank { font-size: 0.72rem; font-weight: 700; color: var(--text-3); width: 20px; text-align: center; font-family: 'JetBrains Mono', monospace; }
+        .top-user .avatar { width: 34px; height: 34px; background: var(--orange); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+        .top-user .info { flex: 1; min-width: 0; }
+        .top-user .info .name { font-size: 0.8rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top-user .info .email { font-size: 0.68rem; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top-user .req { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; font-weight: 700; color: var(--orange); text-align: right; }
+        .top-user .bar-wrap { width: 80px; background: var(--border); border-radius: 100px; height: 6px; overflow: hidden; }
+        .top-user .bar-fill { height: 100%; background: var(--orange); border-radius: 100px; transition: width .6s ease; }
+
+        /* Search */
+        .table-search { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: var(--text); font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; outline: none; }
+        .table-search:focus { border-color: var(--orange); }
+        .table-search::placeholder { color: var(--text-3); }
+
+        /* Btn */
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: opacity .15s; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--orange); color: #fff; }
+        .btn-ghost { background: var(--bg); color: var(--text-2); border: 1px solid var(--border); }
+
+        /* Loader */
+        .loader { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 1s linear infinite; margin: 32px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Pagination */
+        .pagination { display: flex; align-items: center; gap: 6px; padding: 14px 16px; justify-content: flex-end; border-top: 1px solid var(--border); }
+        .page-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--text-2); font-size: 0.75rem; cursor: pointer; }
+        .page-btn.active { background: var(--orange); color: #fff; border-color: var(--orange); }
+        .page-btn:hover:not(.active) { border-color: var(--orange); color: var(--orange); }
+
+        /* Signup chart */
+        .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 80px; padding: 0 20px 12px; }
+        .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .chart-bar { width: 100%; background: var(--orange); border-radius: 3px 3px 0 0; transition: height .5s ease; min-height: 2px; opacity: .8; }
+        .chart-bar:hover { opacity: 1; }
+        .chart-label { font-size: 0.55rem; color: var(--text-3); white-space: nowrap; }
+
+        @media (max-width: 600px) {
+            .header { padding: 12px 14px; }
+            .main-wrap { padding: 16px 14px; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-logo">
+        <div class="logo-box">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff"><path d="M2 8 L8 2 L14 8 L8 14 Z"/></svg>
+        </div>
+        <div>
+            <div style="font-size:0.85rem;font-weight:700;color:var(--text);line-height:1.2">XTE Admin</div>
+            <div style="font-size:0.65rem;color:var(--text-3);line-height:1">Control Panel</div>
+        </div>
+        <span class="admin-badge">Admin</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="toggleTheme()" class="btn btn-ghost" style="padding:6px 10px;">
+            <span class="material-icons" id="themeIcon" style="font-size:16px;">dark_mode</span>
+        </button>
+        <button onclick="refreshData()" class="btn btn-ghost" style="padding:6px 10px;" id="refreshBtn">
+            <span class="material-icons" style="font-size:16px;">refresh</span>
+        </button>
+        <a href="/dashboard" class="btn btn-ghost" style="text-decoration:none;">
+            <span class="material-icons" style="font-size:16px;">dashboard</span> Dashboard
+        </a>
+        <button onclick="logout()" class="btn btn-ghost" style="padding:6px 10px;color:#ef4444;border-color:#ef4444;">
+            <span class="material-icons" style="font-size:16px;">logout</span>
+        </button>
+    </div>
+</header>
+
+<div class="main-wrap" style="max-width:1000px;margin:0 auto;padding:24px 20px;">
+
+    <!-- Stat Cards -->
+    <div class="stat-grid" id="statGrid">
+        <div class="stat-card"><div class="label">Total User</div><div class="value" id="sTotal">—</div><div class="sub">Semua akun terdaftar</div></div>
+        <div class="stat-card"><div class="label">Terverifikasi</div><div class="value" id="sVerified">—</div><div class="sub">Akun aktif</div></div>
+        <div class="stat-card"><div class="label">Belum Verif</div><div class="value" id="sUnverified">—</div><div class="sub">Perlu verifikasi email</div></div>
+        <div class="stat-card"><div class="label">Total Request</div><div class="value" id="sTotalReq">—</div><div class="sub">Semua waktu</div></div>
+        <div class="stat-card"><div class="label">Request Hari Ini</div><div class="value" id="sTodayReq">—</div><div class="sub">Sejak tengah malam</div></div>
+        <div class="stat-card"><div class="label">Aktif Hari Ini</div><div class="value" id="sActive">—</div><div class="sub">User yg request hari ini</div></div>
+    </div>
+
+    <!-- Top Users + Signup Chart side by side -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;" id="topGrid">
+        <!-- Top Users -->
+        <div class="section">
+            <div class="section-head">
+                <div class="section-title"><span class="material-icons" style="font-size:15px;color:var(--orange)">emoji_events</span> Top User</div>
+                <span style="font-size:0.68rem;color:var(--text-3)">by total request</span>
+            </div>
+            <div id="topUsersList"><div class="loader"></div></div>
+        </div>
+
+        <!-- Signup chart -->
+        <div class="section">
+            <div class="section-head">
+                <div class="section-title"><span class="material-icons" style="font-size:15px;color:var(--orange)">people</span> Registrasi</div>
+                <span style="font-size:0.68rem;color:var(--text-3)">30 hari terakhir</span>
+            </div>
+            <div id="signupChart" style="padding-top:16px;"><div class="loader"></div></div>
+        </div>
+    </div>
+
+    <!-- All Users Table -->
+    <div class="section">
+        <div class="section-head">
+            <div class="section-title"><span class="material-icons" style="font-size:15px;color:var(--orange)">group</span> Semua User</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+                <input type="text" class="table-search" id="userSearch" placeholder="Cari nama / email..." style="width:180px;" oninput="filterUsers()">
+                <button class="btn btn-ghost" onclick="exportCSV()" style="padding:6px 10px;">
+                    <span class="material-icons" style="font-size:15px;">download</span> CSV
+                </button>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortUsers('name')" style="cursor:pointer;"># Nama</th>
+                        <th onclick="sortUsers('email')" style="cursor:pointer;">Email</th>
+                        <th>Status</th>
+                        <th onclick="sortUsers('total_requests')" style="cursor:pointer;">Total Req</th>
+                        <th onclick="sortUsers('today_requests')" style="cursor:pointer;">Hari Ini</th>
+                        <th onclick="sortUsers('joined_at')" style="cursor:pointer;">Bergabung</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr><td colspan="6" style="text-align:center;padding:32px;"><div class="loader" style="margin:0 auto;"></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="paginationWrap"></div>
+    </div>
+
+</div>
+
+<script>
+    // ── Theme ──
+    (function() {
+        const s = localStorage.getItem('xte-theme');
+        if (s === 'dark') { document.documentElement.setAttribute('data-theme','dark'); }
+    })();
+
+    function toggleTheme() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        localStorage.setItem('xte-theme', isDark ? 'light' : 'dark');
+        document.getElementById('themeIcon').textContent = isDark ? 'dark_mode' : 'light_mode';
+    }
+
+    // ── Auth ──
+    function getToken() { return localStorage.getItem('xte-token') || ''; }
+    function logout() {
+        localStorage.removeItem('xte-token');
+        localStorage.removeItem('xte-name');
+        localStorage.removeItem('xte-email');
+        localStorage.removeItem('xte-apikey');
+        window.location.href = '/auth';
+    }
+
+    // ── State ──
+    let allUsers = [];
+    let filteredUsers = [];
+    let sortKey = 'joined_at';
+    let sortAsc = false;
+    let currentPage = 1;
+    const PAGE_SIZE = 15;
+
+    // ── Fetch data ──
+    async function fetchStats() {
+        const r = await fetch('/api/admin/stats', { headers: { Authorization: 'Bearer ' + getToken() } });
+        if (r.status === 403) { window.location.href = '/'; return null; }
+        if (!r.ok) throw new Error('Gagal fetch stats');
+        return (await r.json()).data;
+    }
+
+    async function fetchUsers() {
+        const r = await fetch('/api/admin/users', { headers: { Authorization: 'Bearer ' + getToken() } });
+        if (!r.ok) throw new Error('Gagal fetch users');
+        return (await r.json()).data;
+    }
+
+    async function loadData() {
+        try {
+            const [stats, users] = await Promise.all([fetchStats(), fetchUsers()]);
+            if (!stats) return;
+
+            // Fill stat cards
+            document.getElementById('sTotal').textContent      = fmt(stats.totalUsers);
+            document.getElementById('sVerified').textContent   = fmt(stats.verifiedUsers);
+            document.getElementById('sUnverified').textContent = fmt(stats.unverifiedUsers);
+            document.getElementById('sTotalReq').textContent   = fmtNum(stats.totalRequests);
+            document.getElementById('sTodayReq').textContent   = fmtNum(stats.todayRequests);
+            document.getElementById('sActive').textContent     = fmt(stats.activeToday);
+
+            // Top users
+            renderTopUsers(stats.topUsers);
+
+            // Signup chart
+            renderSignupChart(stats.recentSignups);
+
+            // Users table
+            allUsers = users;
+            filteredUsers = [...users];
+            renderTable();
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    function refreshData() {
+        const btn = document.getElementById('refreshBtn');
+        btn.querySelector('.material-icons').style.animation = 'spin 1s linear infinite';
+        loadData().finally(() => {
+            btn.querySelector('.material-icons').style.animation = '';
+        });
+    }
+
+    // ── Formatters ──
+    function fmt(n) { return n?.toLocaleString('id-ID') ?? '—'; }
+    function fmtNum(n) {
+        n = parseInt(n) || 0;
+        if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+        return n.toLocaleString('id-ID');
+    }
+    function fmtDate(iso) {
+        if (!iso) return '—';
+        return new Date(iso).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    // ── Top Users ──
+    function renderTopUsers(topUsers) {
+        if (!topUsers || !topUsers.length) {
+            document.getElementById('topUsersList').innerHTML = '<p style="text-align:center;padding:24px;color:var(--text-3);font-size:0.78rem;">Belum ada data</p>';
+            return;
+        }
+        const max = topUsers[0].total_requests || 1;
+        document.getElementById('topUsersList').innerHTML = topUsers.map((u, i) => `
+            <div class="top-user">
+                <div class="rank">${i+1}</div>
+                <div class="avatar">${u.name.trim()[0].toUpperCase()}</div>
+                <div class="info">
+                    <div class="name">${esc(u.name)}</div>
+                    <div class="email">${esc(u.email)}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                    <div class="req">${fmtNum(u.total_requests)}</div>
+                    <div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(u.total_requests/max*100)}%"></div></div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Signup Chart ──
+    function renderSignupChart(signups) {
+        const el = document.getElementById('signupChart');
+        if (!signups || !Object.keys(signups).length) {
+            el.innerHTML = '<p style="text-align:center;padding:24px;color:var(--text-3);font-size:0.78rem;">Belum ada data</p>';
+            return;
+        }
+        // Build last 14 days
+        const days = [];
+        for (let i = 13; i >= 0; i--) {
+            const d = new Date(Date.now() - i * 86400000).toISOString().slice(0,10);
+            days.push(d);
+        }
+        const max = Math.max(...days.map(d => signups[d] || 0), 1);
+        const bars = days.map(d => {
+            const count = signups[d] || 0;
+            const h = Math.round((count / max) * 68);
+            const label = d.slice(5); // MM-DD
+            return `<div class="chart-bar-wrap" title="${d}: ${count} user">
+                <div class="chart-bar" style="height:${h}px;"></div>
+                <div class="chart-label">${label.replace('-','/')}</div>
+            </div>`;
+        });
+        el.innerHTML = `<div class="chart-bars">${bars.join('')}</div>
+            <div style="text-align:center;font-size:0.68rem;color:var(--text-3);padding-bottom:12px;">14 hari terakhir</div>`;
+    }
+
+    // ── Table ──
+    function sortUsers(key) {
+        if (sortKey === key) sortAsc = !sortAsc;
+        else { sortKey = key; sortAsc = false; }
+        filteredUsers.sort((a, b) => {
+            const av = a[key] ?? 0, bv = b[key] ?? 0;
+            if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+            return sortAsc ? av - bv : bv - av;
+        });
+        currentPage = 1;
+        renderTable();
+    }
+
+    function filterUsers() {
+        const q = document.getElementById('userSearch').value.toLowerCase();
+        filteredUsers = allUsers.filter(u =>
+            u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+        );
+        // re-sort
+        filteredUsers.sort((a, b) => {
+            const av = a[sortKey] ?? 0, bv = b[sortKey] ?? 0;
+            if (typeof av === 'string') return sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+            return sortAsc ? av - bv : bv - av;
+        });
+        currentPage = 1;
+        renderTable();
+    }
+
+    function renderTable() {
+        const start = (currentPage - 1) * PAGE_SIZE;
+        const page  = filteredUsers.slice(start, start + PAGE_SIZE);
+        const tbody = document.getElementById('usersTableBody');
+
+        if (!page.length) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text-3);">Tidak ada user ditemukan</td></tr>';
+            document.getElementById('paginationWrap').innerHTML = '';
+            return;
+        }
+
+        tbody.innerHTML = page.map((u, i) => `
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:28px;height:28px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0;">${u.name.trim()[0].toUpperCase()}</div>
+                        <span style="font-weight:500;color:var(--text);">${esc(u.name)}</span>
+                    </div>
+                </td>
+                <td class="mono">${esc(u.email)}</td>
+                <td><span class="${u.is_verified ? 'badge-verified' : 'badge-unverified'}">${u.is_verified ? '✓ Aktif' : '⏳ Pending'}</span></td>
+                <td style="font-weight:600;color:var(--text);">${fmtNum(u.total_requests || 0)}</td>
+                <td style="color:${(u.today_requests||0)>0 ? 'var(--orange)' : 'var(--text-3)'};">${fmtNum(u.today_requests || 0)}</td>
+                <td>${fmtDate(u.joined_at)}</td>
+            </tr>
+        `).join('');
+
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const total = Math.ceil(filteredUsers.length / PAGE_SIZE);
+        const wrap  = document.getElementById('paginationWrap');
+        if (total <= 1) { wrap.innerHTML = ''; return; }
+
+        let html = `<span style="font-size:0.72rem;color:var(--text-3);margin-right:6px;">${filteredUsers.length} user</span>`;
+        const prev = currentPage > 1;
+        const next = currentPage < total;
+        html += `<button class="page-btn" ${!prev?'disabled style="opacity:.4"':''} onclick="goPage(${currentPage-1})"><span class="material-icons" style="font-size:14px;">chevron_left</span></button>`;
+
+        for (let i = Math.max(1,currentPage-2); i <= Math.min(total,currentPage+2); i++) {
+            html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+        }
+
+        html += `<button class="page-btn" ${!next?'disabled style="opacity:.4"':''} onclick="goPage(${currentPage+1})"><span class="material-icons" style="font-size:14px;">chevron_right</span></button>`;
+        wrap.innerHTML = html;
+    }
+
+    function goPage(p) { currentPage = p; renderTable(); }
+
+    // ── CSV Export ──
+    function exportCSV() {
+        const rows = [['Nama','Email','Status','Total Request','Request Hari Ini','Bergabung']];
+        filteredUsers.forEach(u => rows.push([
+            u.name, u.email,
+            u.is_verified ? 'Aktif' : 'Pending',
+            u.total_requests || 0,
+            u.today_requests || 0,
+            fmtDate(u.joined_at)
+        ]));
+        const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `xte-users-${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+    }
+
+    // ── XSS helper ──
+    function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Responsive top grid ──
+    function handleResize() {
+        const g = document.getElementById('topGrid');
+        if (!g) return;
+        g.style.gridTemplateColumns = window.innerWidth < 640 ? '1fr' : '1fr 1fr';
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // ── Init ──
+    window.addEventListener('DOMContentLoaded', () => {
+        const saved = localStorage.getItem('xte-theme');
+        if (saved === 'dark') document.getElementById('themeIcon').textContent = 'light_mode';
+        loadData();
+    });
+</script>
+</body>
+</html>
