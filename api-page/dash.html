@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XTE API Dashboard</title>
+    <link rel="icon" href="https://api.xte.web.id/src/icon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #f8f7f4;
+            --surface:   #ffffff;
+            --surface2:  #f2f0ec;
+            --border:    #e8e4de;
+            --orange:    #e8611a;
+            --orange-lt: #f5905a;
+            --orange-dim:#fde8d8;
+            --text:      #1c1917;
+            --text-2:    #6b6460;
+            --text-3:    #a8a29e;
+            --radius:    12px;
+            --radius-sm: 8px;
+            --shadow:    0 2px 12px rgba(232,97,26,0.10);
+            --shadow-lg: 0 8px 32px rgba(232,97,26,0.16);
+            --green:     #22c55e;
+            --red:       #ef4444;
+        }
+
+        [data-theme="dark"] {
+            --bg:        #0f0e0d;
+            --surface:   #1a1917;
+            --surface2:  #222120;
+            --border:    #2e2b28;
+            --orange-dim:#2a1a0e;
+            --text:      #f5f0eb;
+            --text-2:    #a89e96;
+            --text-3:    #6b6460;
+            --shadow:    0 2px 12px rgba(232,97,26,0.15);
+            --shadow-lg: 0 8px 32px rgba(232,97,26,0.22);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::-webkit-scrollbar { display: none; }
+
+        /* ── HEADER ── */
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(248,247,244,0.9);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            transition: background .3s;
+        }
+        [data-theme="dark"] header { background: rgba(26,25,23,0.92); }
+        .header-inner {
+            max-width: 720px; margin: 0 auto;
+            padding: 0 24px; height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-mark {
+            width: 32px; height: 32px; background: var(--orange);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+        }
+        .logo-mark svg { width: 16px; height: 16px; fill: #fff; }
+        .logo-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+        .logo-name span { color: var(--orange); }
+
+        .header-right { display: flex; align-items: center; gap: 8px; }
+
+        /* Avatar */
+        .avatar-btn {
+            width: 34px; height: 34px;
+            background: var(--orange);
+            border-radius: 50%;
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700; color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: filter .2s, box-shadow .2s;
+            position: relative;
+        }
+        .avatar-btn:hover { filter: brightness(1.1); box-shadow: 0 0 0 3px var(--orange-dim); }
+
+        /* Dropdown */
+        .avatar-dropdown {
+            position: absolute; top: calc(100% + 10px); right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            padding: 8px;
+            z-index: 200;
+            display: none;
+            animation: dropIn .18s ease;
+        }
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .avatar-dropdown.open { display: block; }
+        .dd-user {
+            padding: 10px 12px 12px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 6px;
+        }
+        .dd-name { font-size: 0.83rem; font-weight: 700; color: var(--text); }
+        .dd-email { font-size: 0.7rem; color: var(--text-3); margin-top: 2px; }
+        .dd-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px; border-radius: var(--radius-sm);
+            font-size: 0.8rem; font-weight: 500; color: var(--text-2);
+            cursor: pointer; text-decoration: none;
+            transition: background .15s, color .15s;
+        }
+        .dd-item i { width: 14px; text-align: center; font-size: 0.75rem; color: var(--text-3); transition: color .15s; }
+        .dd-item:hover { background: var(--orange-dim); color: var(--orange); }
+        .dd-item:hover i { color: var(--orange); }
+        .dd-item.danger:hover { background: rgba(239,68,68,0.08); color: var(--red); }
+        .dd-item.danger:hover i { color: var(--red); }
+        .dd-sep { height: 1px; background: var(--border); margin: 6px 0; }
+
+        /* Theme btn */
+        .theme-btn {
+            width: 36px; height: 36px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-2);
+            font-size: 0.85rem;
+            transition: background .2s, border-color .2s, color .2s;
+        }
+        .theme-btn:hover { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+
+        /* ── MAIN ── */
+        main {
+            max-width: 720px; margin: 0 auto;
+            padding: 36px 24px 60px;
+        }
+
+        /* Welcome bar */
+        .welcome-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 28px;
+            opacity: 0; animation: fadeUp .45s .05s ease forwards;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .welcome-text {}
+        .welcome-greeting { font-size: 0.72rem; font-weight: 600; color: var(--text-3); letter-spacing: .08em; text-transform: uppercase; }
+        .welcome-name { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.03em; color: var(--text); margin-top: 2px; }
+        .welcome-name span { color: var(--orange); }
+
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 100px; padding: 5px 12px;
+            font-size: 0.68rem; font-weight: 600; color: var(--text-2);
+        }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 0 2px rgba(34,197,94,0.2);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,0.2); }
+            50%      { box-shadow: 0 0 0 5px rgba(34,197,94,0.07); }
+        }
+
+        /* Section label */
+        .section-label {
+            font-size: 0.62rem; font-weight: 700; letter-spacing: .1em;
+            text-transform: uppercase; color: var(--text-3);
+            margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* ── STAT CARDS ── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 28px;
+            opacity: 0; animation: fadeUp .45s .1s ease forwards;
+        }
+        .stat-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px 14px;
+            transition: border-color .2s, transform .2s, box-shadow .2s;
+        }
+        .stat-card:hover { border-color: var(--orange-lt); transform: translateY(-2px); box-shadow: var(--shadow); }
+        .stat-icon {
+            width: 32px; height: 32px; border-radius: var(--radius-sm);
+            background: var(--orange-dim); color: var(--orange);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; margin-bottom: 12px;
+        }
+        .stat-num {
+            font-size: 1.4rem; font-weight: 700; color: var(--text);
+            font-family: 'JetBrains Mono', monospace; line-height: 1;
+        }
+        .stat-num.orange { color: var(--orange); }
+        .stat-label { font-size: 0.68rem; color: var(--text-3); font-weight: 500; margin-top: 4px; }
+
+        /* ── API KEY CARD ── */
+        .apikey-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px;
+            margin-bottom: 12px;
+            opacity: 0; animation: fadeUp .45s .15s ease forwards;
+        }
+        .apikey-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .apikey-title { font-size: 0.83rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .apikey-title i { color: var(--orange); font-size: 0.85rem; }
+
+        .apikey-box {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            margin-bottom: 12px;
+        }
+        .apikey-value {
+            flex: 1; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; color: var(--text-2);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            letter-spacing: .02em;
+        }
+        .icon-btn {
+            background: none; border: none; cursor: pointer;
+            color: var(--text-3); font-size: 0.8rem; padding: 4px 6px;
+            border-radius: 6px; transition: color .15s, background .15s;
+            flex-shrink: 0;
+        }
+        .icon-btn:hover { color: var(--orange); background: var(--orange-dim); }
+
+        .apikey-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-sm {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: var(--radius-sm);
+            font-size: 0.75rem; font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer; border: none; transition: all .18s;
+        }
+        .btn-primary { background: var(--orange); color: #fff; }
+        .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: var(--shadow); }
+        .btn-outline {
+            background: var(--surface); color: var(--text-2);
+            border: 1px solid var(--border);
+        }
+        .btn-outline:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+        .btn-danger-outline {
+            background: var(--surface); color: var(--red);
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+        .btn-danger-outline:hover { background: rgba(239,68,68,0.07); border-color: var(--red); }
+
+        /* Key masked / revealed */
+        .key-masked { letter-spacing: .12em; }
+
+        /* ── PROFILE CARD ── */
+        .profile-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px;
+            margin-bottom: 12px;
+            opacity: 0; animation: fadeUp .45s .2s ease forwards;
+        }
+        .profile-top {
+            display: flex; align-items: center; gap: 16px;
+            margin-bottom: 20px;
+        }
+        .profile-avatar {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: var(--orange);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; font-weight: 700; color: #fff;
+            flex-shrink: 0;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .profile-info {}
+        .profile-name { font-size: 1rem; font-weight: 700; color: var(--text); }
+        .profile-role {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: .06em;
+            background: var(--orange-dim); color: var(--orange);
+            padding: 2px 8px; border-radius: 100px;
+            margin-top: 4px; text-transform: uppercase;
+        }
+
+        .profile-fields { display: flex; flex-direction: column; gap: 10px; }
+        .pf-row {
+            display: flex; align-items: center;
+            padding: 10px 12px;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); gap: 12px;
+        }
+        .pf-icon { color: var(--text-3); font-size: 0.8rem; width: 16px; text-align: center; }
+        .pf-label { font-size: 0.65rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; min-width: 52px; }
+        .pf-val { font-size: 0.8rem; color: var(--text); font-weight: 500; flex: 1; }
+        .pf-edit {
+            background: none; border: none; cursor: pointer;
+            font-size: 0.72rem; color: var(--text-3);
+            padding: 3px 7px; border-radius: 5px;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: color .15s, background .15s; font-weight: 500;
+        }
+        .pf-edit:hover { color: var(--orange); background: var(--orange-dim); }
+
+        /* Inline edit */
+        .pf-input {
+            flex: 1; background: none; border: none; outline: none;
+            font-size: 0.8rem; font-family: 'Space Grotesk', sans-serif;
+            color: var(--text); font-weight: 500;
+        }
+
+        /* ── QUICK LINKS ── */
+        .links-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin-bottom: 12px;
+            opacity: 0; animation: fadeUp .45s .25s ease forwards;
+        }
+        .link-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px;
+            text-decoration: none; cursor: pointer;
+            display: flex; align-items: center; gap: 12px;
+            transition: border-color .18s, transform .18s, box-shadow .18s;
+        }
+        .link-card:hover { border-color: var(--orange); transform: translateY(-2px); box-shadow: var(--shadow); }
+        .link-icon {
+            width: 38px; height: 38px; border-radius: var(--radius-sm);
+            background: var(--orange-dim); color: var(--orange);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; flex-shrink: 0;
+            transition: background .18s, color .18s;
+        }
+        .link-card:hover .link-icon { background: var(--orange); color: #fff; }
+        .link-title { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+        .link-sub { font-size: 0.68rem; color: var(--text-3); margin-top: 2px; }
+
+        /* ── ACTIVITY ── */
+        .activity-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px;
+            opacity: 0; animation: fadeUp .45s .3s ease forwards;
+        }
+        .activity-list { display: flex; flex-direction: column; gap: 0; }
+        .activity-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+        }
+        .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .act-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .act-dot.green { background: var(--green); }
+        .act-dot.orange { background: var(--orange); }
+        .act-dot.gray { background: var(--text-3); }
+        .act-text { flex: 1; font-size: 0.77rem; color: var(--text-2); line-height: 1.4; }
+        .act-text strong { color: var(--text); font-weight: 600; }
+        .act-time { font-size: 0.68rem; color: var(--text-3); font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 500;
+            background: rgba(0,0,0,0.4);
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px;
+            opacity: 0; visibility: hidden;
+            transition: opacity .2s, visibility .2s;
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 28px 24px;
+            max-width: 360px; width: 100%;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(12px);
+            transition: transform .2s;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+        .modal-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+        .modal-sub { font-size: 0.78rem; color: var(--text-2); line-height: 1.5; margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .btn-modal-cancel {
+            padding: 8px 16px; border-radius: var(--radius-sm);
+            font-size: 0.78rem; font-weight: 600; cursor: pointer;
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text-2); font-family: 'Space Grotesk', sans-serif;
+            transition: border-color .15s, color .15s;
+        }
+        .btn-modal-cancel:hover { border-color: var(--border); color: var(--text); }
+        .btn-modal-confirm {
+            padding: 8px 16px; border-radius: var(--radius-sm);
+            font-size: 0.78rem; font-weight: 600; cursor: pointer;
+            background: var(--red); color: #fff; border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: filter .15s;
+        }
+        .btn-modal-confirm:hover { filter: brightness(1.08); }
+
+        /* ── TOAST ── */
+        #toast {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 10px 18px;
+            font-size: 0.78rem; font-weight: 500; color: var(--text);
+            box-shadow: var(--shadow-lg); z-index: 999;
+            display: flex; align-items: center; gap: 8px;
+            transition: transform .3s ease, opacity .3s ease;
+            white-space: nowrap;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        #toast.ok i { color: var(--green); }
+        #toast.err i { color: var(--red); }
+        #toast.warn i { color: #f59e0b; }
+
+        /* FOOTER */
+        footer {
+            text-align: center; padding: 16px 24px 28px;
+            font-size: 0.68rem; color: var(--text-3);
+        }
+        footer a { color: var(--text-3); text-decoration: none; transition: color .18s; }
+        footer a:hover { color: var(--orange); }
+        .footer-author { color: var(--orange); font-weight: 600; }
+
+        @media (max-width: 520px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .links-grid { grid-template-columns: 1fr; }
+            .welcome-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="header-inner">
+        <a class="logo" href="/">
+            <div class="logo-mark">
+                <svg viewBox="0 0 16 16"><path d="M2 8 L8 2 L14 8 L8 14 Z"/></svg>
+            </div>
+            <span class="logo-name"><span>XTE</span> API</span>
+        </a>
+        <div class="header-right">
+            <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+            <!-- Avatar + dropdown -->
+            <div style="position:relative;">
+                <button class="avatar-btn" id="avatarBtn" onclick="toggleDropdown()">
+                    <span id="avatarInitial">T</span>
+                </button>
+                <div class="avatar-dropdown" id="avatarDropdown">
+                    <div class="dd-user">
+                        <div class="dd-name" id="ddName">Topi Dev</div>
+                        <div class="dd-email" id="ddEmail">topi@example.com</div>
+                    </div>
+                    <a class="dd-item" href="#profile" onclick="closeDropdown()">
+                        <i class="fas fa-user"></i> Profil Saya
+                    </a>
+                    <a class="dd-item" href="/docs">
+                        <i class="fas fa-book-open"></i> Dokumentasi
+                    </a>
+                    <div class="dd-sep"></div>
+                    <div class="dd-item danger" onclick="doLogout()">
+                        <i class="fas fa-right-from-bracket"></i> Logout
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+    <!-- Welcome -->
+    <div class="welcome-bar">
+        <div class="welcome-text">
+            <div class="welcome-greeting">Dashboard</div>
+            <div class="welcome-name">Halo, <span id="welcomeName">Topi</span> 👋</div>
+        </div>
+        <div class="status-pill">
+            <span class="status-dot"></span> API Active
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="section-label" style="opacity:0;animation:fadeUp .45s .08s ease forwards">Overview</div>
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+            <div class="stat-num orange" id="statRequests">0</div>
+            <div class="stat-label">Total Request</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+            <div class="stat-num" id="statToday">0</div>
+            <div class="stat-label">Request Hari Ini</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-shield-halved"></i></div>
+            <div class="stat-num" style="color:var(--green)">99%</div>
+            <div class="stat-label">Uptime</div>
+        </div>
+    </div>
+
+    <!-- API KEY -->
+    <div class="section-label" style="opacity:0;animation:fadeUp .45s .13s ease forwards">API Key</div>
+    <div class="apikey-card">
+        <div class="apikey-header">
+            <div class="apikey-title"><i class="fas fa-key"></i> API Key Kamu</div>
+            <span style="font-size:0.65rem;background:var(--orange-dim);color:var(--orange);padding:2px 8px;border-radius:100px;font-weight:700;">ACTIVE</span>
+        </div>
+        <div class="apikey-box">
+            <span class="apikey-value" id="apikeyDisplay"></span>
+            <button class="icon-btn" id="eyeKeyBtn" onclick="toggleKeyVisibility()" title="Tampilkan/sembunyikan">
+                <i class="fas fa-eye" id="eyeKeyIcon"></i>
+            </button>
+            <button class="icon-btn" onclick="copyApiKey()" title="Salin">
+                <i class="fas fa-copy" id="copyIcon"></i>
+            </button>
+        </div>
+        <div class="apikey-actions">
+            <button class="btn-sm btn-primary" onclick="openRegenModal()">
+                <i class="fas fa-rotate"></i> Buat Ulang Key
+            </button>
+            <button class="btn-sm btn-outline" onclick="copyApiKey()">
+                <i class="fas fa-copy"></i> Salin Key
+            </button>
+        </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="section-label" id="profile" style="opacity:0;animation:fadeUp .45s .18s ease forwards;scroll-margin-top:80px">Profil</div>
+    <div class="profile-card">
+        <div class="profile-top">
+            <div class="profile-avatar" id="profileAvatar">T</div>
+            <div class="profile-info">
+                <div class="profile-name" id="profileName">Topi Dev</div>
+                <div class="profile-role"><i class="fas fa-circle" style="font-size:5px"></i> Developer</div>
+            </div>
+        </div>
+        <div class="profile-fields">
+            <!-- Name -->
+            <div class="pf-row">
+                <i class="fas fa-user pf-icon"></i>
+                <span class="pf-label">Nama</span>
+                <span class="pf-val" id="pfName">Topi Dev</span>
+                <button class="pf-edit" onclick="editField('name')">Edit</button>
+            </div>
+            <!-- Email -->
+            <div class="pf-row">
+                <i class="fas fa-envelope pf-icon"></i>
+                <span class="pf-label">Email</span>
+                <span class="pf-val" id="pfEmail">topi@example.com</span>
+                <button class="pf-edit" onclick="editField('email')">Edit</button>
+            </div>
+            <!-- Member since -->
+            <div class="pf-row">
+                <i class="fas fa-calendar pf-icon"></i>
+                <span class="pf-label">Bergabung</span>
+                <span class="pf-val" id="pfJoined">—</span>
+            </div>
+            <!-- Plan -->
+            <div class="pf-row">
+                <i class="fas fa-star pf-icon" style="color:var(--orange)"></i>
+                <span class="pf-label">Plan</span>
+                <span class="pf-val" style="color:var(--orange);font-weight:700;">Free</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK LINKS -->
+    <div class="section-label" style="opacity:0;animation:fadeUp .45s .23s ease forwards">Akses Cepat</div>
+    <div class="links-grid">
+        <a class="link-card" href="/docs">
+            <div class="link-icon"><i class="fas fa-book-open"></i></div>
+            <div>
+                <div class="link-title">Kunjungi Docs</div>
+                <div class="link-sub">Lihat semua endpoint</div>
+            </div>
+        </a>
+        <a class="link-card" href="https://wa.me/6282221744770" target="_blank">
+            <div class="link-icon"><i class="fab fa-whatsapp"></i></div>
+            <div>
+                <div class="link-title">Hubungi Kami</div>
+                <div class="link-sub">Via WhatsApp</div>
+            </div>
+        </a>
+        <a class="link-card" href="https://whatsapp.com/channel/0029Va4K0PZ5a245NkngBA2M" target="_blank">
+            <div class="link-icon"><i class="fab fa-whatsapp"></i></div>
+            <div>
+                <div class="link-title">Join Channel</div>
+                <div class="link-sub">Update terbaru</div>
+            </div>
+        </a>
+        <a class="link-card" href="https://github.com/defanProject" target="_blank">
+            <div class="link-icon"><i class="fab fa-github"></i></div>
+            <div>
+                <div class="link-title">GitHub</div>
+                <div class="link-sub">Source code & kontribusi</div>
+            </div>
+        </a>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="section-label" style="opacity:0;animation:fadeUp .45s .28s ease forwards">Aktivitas Terbaru</div>
+    <div class="activity-card">
+        <div class="activity-list" id="activityList"></div>
+    </div>
+
+    <!-- ADMIN PANEL (hanya tampil untuk admin) -->
+    <div style="opacity:0;animation:fadeUp .45s .28s ease forwards;margin-top:16px;display:none;" id="adminPanelBtn">
+        <a href="/admin" style="
+            width:100%; padding:12px;
+            background:none; border:1px solid rgba(232,97,26,0.35);
+            border-radius:var(--radius-sm); cursor:pointer;
+            font-size:0.82rem; font-weight:600; color:var(--orange);
+            font-family:'Space Grotesk',sans-serif;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            transition:background .18s, border-color .18s, transform .18s;
+            text-decoration:none;
+        " onmouseover="this.style.background='rgba(232,97,26,0.08)';this.style.borderColor='var(--orange)';this.style.transform='translateY(-1px)'"
+           onmouseout="this.style.background='none';this.style.borderColor='rgba(232,97,26,0.35)';this.style.transform='none'">
+            <i class="fas fa-shield-halved"></i> Admin Panel
+        </a>
+    </div>
+
+    <!-- LOGOUT -->
+    <div style="opacity:0;animation:fadeUp .45s .33s ease forwards;margin-top:12px;">
+        <button onclick="doLogout()" style="
+            width:100%; padding:12px;
+            background:none; border:1px solid rgba(239,68,68,0.3);
+            border-radius:var(--radius-sm); cursor:pointer;
+            font-size:0.82rem; font-weight:600; color:var(--red);
+            font-family:'Space Grotesk',sans-serif;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            transition:background .18s, border-color .18s, transform .18s;
+        " onmouseover="this.style.background='rgba(239,68,68,0.07)';this.style.borderColor='var(--red)';this.style.transform='translateY(-1px)'"
+           onmouseout="this.style.background='none';this.style.borderColor='rgba(239,68,68,0.3)';this.style.transform='none'">
+            <i class="fas fa-right-from-bracket"></i> Logout
+        </button>
+    </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+    <p>© <span id="year"></span> XTE API — All Rights Reserved. Made by <span class="footer-author">Topi</span></p>
+</footer>
+
+<!-- REGEN MODAL -->
+<div class="modal-overlay" id="regenModal">
+    <div class="modal">
+        <div class="modal-title">⚠️ Buat Ulang API Key?</div>
+        <div class="modal-sub">Key lama akan langsung <strong>tidak aktif</strong> dan semua integrasi yang menggunakannya akan berhenti bekerja. Pastikan kamu sudah siap mengganti key di semua tempat.</div>
+        <div class="modal-actions">
+            <button class="btn-modal-cancel" onclick="closeRegenModal()">Batal</button>
+            <button class="btn-modal-confirm" onclick="regenKey()"><i class="fas fa-rotate"></i> Ya, Buat Ulang</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<script>
+// ── STATE ──
+const user = { name: '', email: '', apiKey: '', joined: '', requests: 0, today: 0 };
+
+// ── THEME ──
+(function() {
+    if (localStorage.getItem('xte-theme') === 'dark')
+        document.documentElement.setAttribute('data-theme','dark');
+})();
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        document.getElementById('themeIcon').className = 'fas fa-moon';
+        localStorage.setItem('xte-theme','light');
+    } else {
+        document.documentElement.setAttribute('data-theme','dark');
+        document.getElementById('themeIcon').className = 'fas fa-sun';
+        localStorage.setItem('xte-theme','dark');
+    }
+}
+
+// ── KEY HELPERS ──
+function maskKey(k) {
+    if (!k) return '••••••••••••••••••••••••••••••••';
+    return k.slice(0,8) + '••••••••••••••••••••••••' + k.slice(-6);
+}
+
+let keyVisible = false;
+function toggleKeyVisibility() {
+    keyVisible = !keyVisible;
+    document.getElementById('apikeyDisplay').textContent = keyVisible ? user.apiKey : maskKey(user.apiKey);
+    document.getElementById('eyeKeyIcon').className = keyVisible ? 'fas fa-eye-slash' : 'fas fa-eye';
+}
+function copyApiKey() {
+    navigator.clipboard.writeText(user.apiKey).then(() => {
+        const icon = document.getElementById('copyIcon');
+        icon.className = 'fas fa-check';
+        showToast('API Key disalin!','ok');
+        setTimeout(() => icon.className = 'fas fa-copy', 1800);
+    });
+}
+
+// ── REGEN ──
+function openRegenModal()  { document.getElementById('regenModal').classList.add('open'); }
+function closeRegenModal() { document.getElementById('regenModal').classList.remove('open'); }
+async function regenKey() {
+    closeRegenModal();
+    try {
+        const token = localStorage.getItem('xte-token');
+        const res = await fetch('/api/dashboard/regenerate-key', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            credentials: 'include',
+        });
+        if (res.status === 401) return handleUnauth();
+        const data = await res.json();
+        if (!res.ok) { showToast(data.message || 'Gagal generate key', 'err'); return; }
+        user.apiKey = data.api_key;
+        keyVisible = true;
+        document.getElementById('apikeyDisplay').textContent = user.apiKey;
+        document.getElementById('eyeKeyIcon').className = 'fas fa-eye-slash';
+        showToast('API Key baru berhasil dibuat!','ok');
+        addActivity('API Key dibuat ulang', 'orange');
+    } catch (err) {
+        showToast('Koneksi gagal', 'err');
+    }
+}
+
+// ── AVATAR DROPDOWN ──
+function toggleDropdown() {
+    document.getElementById('avatarDropdown').classList.toggle('open');
+}
+function closeDropdown() {
+    document.getElementById('avatarDropdown').classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('#avatarBtn') && !e.target.closest('#avatarDropdown'))
+        closeDropdown();
+});
+
+// ── PROFILE EDIT ──
+function editField(field) {
+    if (field === 'name') {
+        const row = document.getElementById('pfName').closest('.pf-row');
+        const val = document.getElementById('pfName').textContent;
+        row.innerHTML = `
+            <i class="fas fa-user pf-icon"></i>
+            <span class="pf-label">Nama</span>
+            <input class="pf-input" id="pfNameInput" value="${val}" maxlength="40">
+            <button class="pf-edit" style="color:var(--orange)" onclick="saveField('name')">Simpan</button>`;
+        document.getElementById('pfNameInput').focus();
+        document.getElementById('pfNameInput').select();
+    } else if (field === 'email') {
+        const row = document.getElementById('pfEmail').closest('.pf-row');
+        const val = document.getElementById('pfEmail').textContent;
+        row.innerHTML = `
+            <i class="fas fa-envelope pf-icon"></i>
+            <span class="pf-label">Email</span>
+            <input class="pf-input" id="pfEmailInput" value="${val}" type="email" maxlength="60">
+            <button class="pf-edit" style="color:var(--orange)" onclick="saveField('email')">Simpan</button>`;
+        document.getElementById('pfEmailInput').focus();
+        document.getElementById('pfEmailInput').select();
+    }
+}
+async function saveField(field) {
+    try {
+        const token = localStorage.getItem('xte-token');
+        const body = {};
+        if (field === 'name') {
+            const val = document.getElementById('pfNameInput').value.trim();
+            if (!val) { showToast('Nama tidak boleh kosong', 'err'); return; }
+            body.name = val;
+        } else if (field === 'email') {
+            const val = document.getElementById('pfEmailInput').value.trim();
+            if (!val) { showToast('Email tidak boleh kosong', 'err'); return; }
+            body.email = val;
+        }
+        const res = await fetch('/api/dashboard/profile', {
+            method: 'PATCH',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(body),
+        });
+        if (res.status === 401) return handleUnauth();
+        const data = await res.json();
+        if (!res.ok) { showToast(data.message || 'Gagal update', 'err'); return; }
+
+        if (field === 'name') {
+            user.name = body.name;
+            localStorage.setItem('xte-name', body.name);
+            const row = document.getElementById('pfNameInput').closest('.pf-row');
+            row.innerHTML = `
+                <i class="fas fa-user pf-icon"></i>
+                <span class="pf-label">Nama</span>
+                <span class="pf-val" id="pfName">${body.name}</span>
+                <button class="pf-edit" onclick="editField('name')">Edit</button>`;
+            updateUserUI();
+            showToast('Nama berhasil diperbarui','ok');
+            addActivity(`Nama diubah menjadi <strong>${body.name}</strong>`, 'green');
+        } else if (field === 'email') {
+            if (data.requireVerification) {
+                showToast('Email diubah. Cek inbox untuk verifikasi OTP.', 'warn');
+                localStorage.removeItem('xte-token');
+                setTimeout(() => { window.location.href = '/auth'; }, 2000);
+            } else {
+                user.email = body.email;
+                localStorage.setItem('xte-email', body.email);
+                const row = document.getElementById('pfEmailInput').closest('.pf-row');
+                row.innerHTML = `
+                    <i class="fas fa-envelope pf-icon"></i>
+                    <span class="pf-label">Email</span>
+                    <span class="pf-val" id="pfEmail">${body.email}</span>
+                    <button class="pf-edit" onclick="editField('email')">Edit</button>`;
+                updateUserUI();
+                showToast('Email berhasil diperbarui','ok');
+            }
+        }
+    } catch (err) {
+        showToast('Koneksi gagal', 'err');
+    }
+}
+
+function updateUserUI() {
+    const initials = user.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('avatarInitial').textContent  = initials[0] || 'U';
+    document.getElementById('profileAvatar').textContent  = initials[0] || 'U';
+    document.getElementById('welcomeName').textContent    = user.name.split(' ')[0];
+    document.getElementById('profileName').textContent    = user.name;
+    document.getElementById('pfName') && (document.getElementById('pfName').textContent = user.name);
+    document.getElementById('pfEmail') && (document.getElementById('pfEmail').textContent = user.email);
+    document.getElementById('ddName').textContent         = user.name;
+    document.getElementById('ddEmail').textContent        = user.email;
+
+    // Tampilkan tombol Admin Panel kalau email admin
+    const adminBtn = document.getElementById('adminPanelBtn');
+    if (adminBtn) adminBtn.style.display = user.email === 'defandryannn@gmail.com' ? 'flex' : 'none';
+}
+
+// ── ACTIVITY ──
+const activities = [];
+function renderActivity() {
+    const list = document.getElementById('activityList');
+    if (!activities.length) {
+        list.innerHTML = '<div class="activity-item"><div class="act-text" style="color:var(--text-3)">Belum ada aktivitas</div></div>';
+        return;
+    }
+    list.innerHTML = activities.slice(0,6).map(a => `
+        <div class="activity-item">
+            <div class="act-dot ${a.color}"></div>
+            <div class="act-text">${a.text}</div>
+            <div class="act-time">${a.time}</div>
+        </div>`).join('');
+}
+function addActivity(text, color) {
+    activities.unshift({ text, color, time: 'Baru saja' });
+    renderActivity();
+}
+
+// ── COUNT ANIMATION ──
+function animCount(el, target) {
+    let cur = 0;
+    const step = Math.ceil(target / 40);
+    const t = setInterval(() => {
+        cur = Math.min(cur + step, target);
+        el.textContent = cur.toLocaleString('id-ID');
+        if (cur >= target) clearInterval(t);
+    }, 30);
+}
+
+// ── UNAUTH HANDLER ──
+async function handleUnauth() {
+    try {
+        const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+        if (res.ok) {
+            const data = await res.json();
+            localStorage.setItem('xte-token', data.token);
+            window.location.reload();
+        } else {
+            localStorage.removeItem('xte-token');
+            window.location.href = '/auth';
+        }
+    } catch {
+        localStorage.removeItem('xte-token');
+        window.location.href = '/auth';
+    }
+}
+
+// ── LOGOUT ──
+async function doLogout() {
+    try {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {}
+    localStorage.removeItem('xte-token');
+    localStorage.removeItem('xte-name');
+    localStorage.removeItem('xte-email');
+    showToast('Logout berhasil. Sampai jumpa!','ok');
+    setTimeout(() => { window.location.href = '/auth'; }, 1000);
+}
+
+// ── TOAST ──
+let toastT;
+function showToast(msg, type) {
+    const t   = document.getElementById('toast');
+    const ico = t.querySelector('i');
+    document.getElementById('toastMsg').textContent = msg;
+    t.className = 'show ' + type;
+    ico.className = type === 'ok' ? 'fas fa-check-circle' : type === 'warn' ? 'fas fa-triangle-exclamation' : 'fas fa-circle-exclamation';
+    clearTimeout(toastT);
+    toastT = setTimeout(() => t.className = '', 3000);
+}
+
+// Close modal on overlay click
+document.getElementById('regenModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('regenModal')) closeRegenModal();
+});
+
+// ── INIT ──
+async function loadDashboard() {
+    const token = localStorage.getItem('xte-token');
+    if (!token) { window.location.href = '/auth'; return; }
+
+    try {
+        const res = await fetch('/api/dashboard/me', {
+            headers: { 'Authorization': 'Bearer ' + token },
+            credentials: 'include',
+        });
+
+        if (res.status === 401) {
+            const errData = await res.json();
+            if (errData.error === 'TOKEN_EXPIRED') {
+                await handleUnauth();
+                return;
+            }
+            localStorage.removeItem('xte-token');
+            window.location.href = '/auth';
+            return;
+        }
+
+        if (!res.ok) { window.location.href = '/auth'; return; }
+
+        const { data } = await res.json();
+        user.name     = data.name;
+        user.email    = data.email;
+        user.apiKey   = data.api_key || '';
+        user.requests = data.total_requests || 0;
+        user.today    = data.today_requests || 0;
+        user.joined   = data.joined_at
+            ? new Date(data.joined_at).toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' })
+            : '-';
+
+        localStorage.setItem('xte-name',  user.name);
+        localStorage.setItem('xte-email', user.email);
+
+        updateUserUI();
+        document.getElementById('pfJoined').textContent = user.joined;
+        document.getElementById('apikeyDisplay').textContent = maskKey(user.apiKey);
+        renderActivity();
+        activities.unshift({ text: 'Login berhasil dari browser', color: 'green', time: 'Baru saja' });
+        renderActivity();
+
+        setTimeout(() => animCount(document.getElementById('statRequests'), user.requests), 300);
+        setTimeout(() => animCount(document.getElementById('statToday'), user.today), 450);
+
+    } catch (err) {
+        console.error('[DASH] Load error:', err);
+        window.location.href = '/auth';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    if (localStorage.getItem('xte-theme') === 'dark')
+        document.getElementById('themeIcon').className = 'fas fa-sun';
+
+    loadDashboard();
+});
+</script>
+</body>
+</html>
