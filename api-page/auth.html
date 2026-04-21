@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XTE API Auth</title>
+    <link rel="icon" href="https://api.xte.web.id/src/icon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:        #f8f7f4;
+            --surface:   #ffffff;
+            --surface2:  #f2f0ec;
+            --border:    #e8e4de;
+            --orange:    #e8611a;
+            --orange-lt: #f5905a;
+            --orange-dim:#fde8d8;
+            --text:      #1c1917;
+            --text-2:    #6b6460;
+            --text-3:    #a8a29e;
+            --radius:    12px;
+            --radius-sm: 8px;
+            --shadow:    0 2px 12px rgba(232,97,26,0.10);
+            --shadow-lg: 0 8px 32px rgba(232,97,26,0.18);
+            --red:       #ef4444;
+            --green:     #22c55e;
+        }
+
+        [data-theme="dark"] {
+            --bg:        #0f0e0d;
+            --surface:   #1a1917;
+            --surface2:  #222120;
+            --border:    #2e2b28;
+            --orange-dim:#2a1a0e;
+            --text:      #f5f0eb;
+            --text-2:    #a89e96;
+            --text-3:    #6b6460;
+            --shadow:    0 2px 12px rgba(232,97,26,0.15);
+            --shadow-lg: 0 8px 32px rgba(232,97,26,0.22);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            display: flex; flex-direction: column;
+        }
+        ::-webkit-scrollbar { display: none; }
+
+        /* HEADER */
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(248,247,244,0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border);
+            transition: background .3s;
+        }
+        [data-theme="dark"] header { background: rgba(26,25,23,0.92); }
+        .header-inner {
+            max-width: 680px; margin: 0 auto;
+            padding: 0 24px; height: 58px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .logo-mark {
+            width: 32px; height: 32px;
+            background: var(--orange); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-mark svg { width: 16px; height: 16px; fill: #fff; }
+        .logo-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+        .logo-name span { color: var(--orange); }
+
+        /* THEME TOGGLE in header */
+        .theme-btn {
+            width: 36px; height: 36px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+            color: var(--text-2); font-size: 0.85rem;
+        }
+        .theme-btn:hover { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+
+        /* MAIN */
+        main {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 40px 24px;
+        }
+
+        /* AUTH CARD */
+        .auth-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px 28px;
+            width: 100%; max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            animation: fadeUp .45s ease forwards;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-logo {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 24px;
+        }
+        .auth-logo-mark {
+            width: 40px; height: 40px;
+            background: var(--orange); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .auth-logo-mark svg { width: 20px; height: 20px; fill: #fff; }
+        .auth-title { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+        .auth-title span { color: var(--orange); }
+
+        /* TABS */
+        .tab-bar {
+            display: flex; gap: 4px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+        .tab-btn {
+            flex: 1; padding: 8px;
+            font-size: 0.8rem; font-weight: 600;
+            border: none; background: none;
+            border-radius: 6px; cursor: pointer;
+            color: var(--text-3);
+            font-family: 'Space Grotesk', sans-serif;
+            transition: background .2s, color .2s, box-shadow .2s;
+        }
+        .tab-btn.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        [data-theme="dark"] .tab-btn.active { box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+        /* FORM */
+        .form-group { margin-bottom: 14px; }
+        .form-label {
+            display: block; font-size: 0.75rem; font-weight: 600;
+            color: var(--text-2); margin-bottom: 6px; letter-spacing: .01em;
+        }
+
+        .input-wrap { position: relative; }
+        .input-wrap .input-icon {
+            position: absolute; left: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-3); font-size: 0.78rem; pointer-events: none;
+            transition: color .18s;
+        }
+        .input-wrap input:focus ~ .input-icon,
+        .input-wrap:focus-within .input-icon { color: var(--orange); }
+
+        .form-input {
+            width: 100%; padding: 10px 12px 10px 36px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.83rem;
+            font-family: 'Space Grotesk', sans-serif;
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+        .form-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,97,26,0.12); }
+        .form-input::placeholder { color: var(--text-3); }
+        .form-input.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(239,68,68,0.10); }
+        .form-input.success { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.10); }
+
+        /* password input has extra right padding for eye icon */
+        .input-pw { padding-right: 40px; }
+        .eye-btn {
+            position: absolute; right: 10px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--text-3); font-size: 0.8rem;
+            padding: 4px; transition: color .18s;
+        }
+        .eye-btn:hover { color: var(--orange); }
+
+        /* field error msg */
+        .field-msg {
+            font-size: 0.7rem; margin-top: 5px;
+            display: none; align-items: center; gap: 4px;
+        }
+        .field-msg.show { display: flex; }
+        .field-msg.err { color: var(--red); }
+        .field-msg.ok  { color: var(--green); }
+
+        /* PASSWORD STRENGTH */
+        .pw-strength { margin-top: 8px; display: none; }
+        .pw-strength.show { display: block; }
+        .pw-bars {
+            display: flex; gap: 4px; margin-bottom: 5px;
+        }
+        .pw-bar {
+            flex: 1; height: 3px; border-radius: 100px;
+            background: var(--border);
+            transition: background .3s;
+        }
+        .pw-bar.fill-weak   { background: var(--red); }
+        .pw-bar.fill-fair   { background: #f59e0b; }
+        .pw-bar.fill-strong { background: var(--green); }
+        .pw-strength-label {
+            font-size: 0.68rem; font-weight: 600;
+            color: var(--text-3); transition: color .3s;
+        }
+        .pw-req {
+            margin-top: 8px;
+            display: flex; flex-direction: column; gap: 3px;
+        }
+        .pw-req-item {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.68rem; color: var(--text-3);
+            transition: color .2s;
+        }
+        .pw-req-item i { font-size: 0.6rem; width: 10px; }
+        .pw-req-item.met { color: var(--green); }
+
+        /* SUBMIT BTN */
+        .btn-submit {
+            width: 100%; padding: 11px;
+            background: var(--orange); color: #fff;
+            font-size: 0.83rem; font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            border: none; border-radius: var(--radius-sm);
+            cursor: pointer; margin-top: 6px;
+            transition: filter .2s, transform .2s, box-shadow .2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-submit:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+        .btn-submit:active { transform: translateY(0); }
+        .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; filter: none; }
+
+        /* DIVIDER */
+        .divider {
+            display: flex; align-items: center; gap: 10px;
+            margin: 18px 0; color: var(--text-3); font-size: 0.7rem;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* SWITCH LINK */
+        .switch-link {
+            text-align: center; font-size: 0.75rem;
+            color: var(--text-3); margin-top: 16px;
+        }
+        .switch-link a {
+            color: var(--orange); font-weight: 600; text-decoration: none;
+            transition: opacity .18s;
+        }
+        .switch-link a:hover { opacity: .8; }
+
+        /* PANEL SWAP */
+        .auth-panel { display: none; }
+        .auth-panel.active { display: block; }
+
+        /* VERIFY PANEL */
+        .verify-panel {
+            text-align: center;
+            animation: fadeUp .4s ease forwards;
+        }
+        .verify-icon {
+            width: 64px; height: 64px;
+            background: var(--orange-dim);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.6rem; color: var(--orange);
+        }
+        .verify-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+        .verify-sub { font-size: 0.8rem; color: var(--text-2); line-height: 1.6; margin-bottom: 24px; }
+        .verify-email-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--orange);
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 24px; word-break: break-all;
+        }
+
+        /* OTP input */
+        .otp-wrap {
+            display: flex; gap: 8px; justify-content: center; margin-bottom: 20px;
+        }
+        .otp-input {
+            width: 44px; height: 52px;
+            text-align: center; font-size: 1.2rem; font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid var(--border);
+            background: var(--bg); color: var(--text);
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+        .otp-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,97,26,0.12); }
+        .otp-input.filled { border-color: var(--orange); }
+
+        .resend-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 0.75rem; color: var(--text-3);
+            font-family: 'Space Grotesk', sans-serif;
+            transition: color .18s;
+        }
+        .resend-btn:hover:not(:disabled) { color: var(--orange); }
+        .resend-btn:disabled { opacity: .5; cursor: default; }
+
+        /* SUCCESS screen */
+        .success-panel {
+            text-align: center;
+            animation: fadeUp .4s ease forwards;
+        }
+        .success-icon {
+            width: 64px; height: 64px;
+            background: rgba(34,197,94,0.1);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.6rem; color: var(--green);
+        }
+
+        /* TOAST */
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 10px 18px;
+            font-size: 0.78rem; font-weight: 500; color: var(--text);
+            box-shadow: var(--shadow-lg); z-index: 999;
+            display: flex; align-items: center; gap: 8px;
+            transition: transform .3s ease, opacity .3s ease;
+            white-space: nowrap;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        #toast i { font-size: 0.85rem; }
+        #toast.toast-ok i { color: var(--green); }
+        #toast.toast-err i { color: var(--red); }
+
+        /* FOOTER */
+        footer {
+            text-align: center; padding: 16px 24px 28px;
+            font-size: 0.68rem; color: var(--text-3);
+        }
+        footer a { color: var(--text-3); text-decoration: none; transition: color .18s; }
+        footer a:hover { color: var(--orange); }
+        .footer-author { color: var(--orange); font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="header-inner">
+        <a class="logo" href="/">
+            <div class="logo-mark">
+                <svg viewBox="0 0 16 16"><path d="M2 8 L8 2 L14 8 L8 14 Z"/></svg>
+            </div>
+            <span class="logo-name"><span>XTE</span> API</span>
+        </a>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme">
+            <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+    </div>
+</header>
+
+<!-- MAIN -->
+<main>
+    <div class="auth-card" id="authCard">
+
+        <!-- AUTH LOGO -->
+        <div class="auth-logo">
+            <div class="auth-logo-mark">
+                <svg viewBox="0 0 16 16"><path d="M2 8 L8 2 L14 8 L8 14 Z"/></svg>
+            </div>
+            <div class="auth-title"><span>XTE</span> API — Auth</div>
+        </div>
+
+        <!-- TABS -->
+        <div class="tab-bar" id="tabBar">
+            <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">
+                <i class="fas fa-sign-in-alt" style="margin-right:5px;font-size:0.75rem"></i>Login
+            </button>
+            <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">
+                <i class="fas fa-user-plus" style="margin-right:5px;font-size:0.75rem"></i>Register
+            </button>
+        </div>
+
+        <!-- ═══ LOGIN PANEL ═══ -->
+        <div class="auth-panel active" id="panelLogin">
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <div class="input-wrap">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="field-msg err" id="loginEmailErr"><i class="fas fa-circle-exclamation"></i><span></span></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrap">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" class="form-input input-pw" id="loginPassword" placeholder="Enter your password" autocomplete="current-password">
+                    <button type="button" class="eye-btn" onclick="toggleEye('loginPassword', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="field-msg err" id="loginPasswordErr"><i class="fas fa-circle-exclamation"></i><span></span></div>
+            </div>
+            <div style="text-align:right;margin-bottom:14px;">
+                <a href="#" style="font-size:0.73rem;color:var(--orange);text-decoration:none;font-weight:600;" onclick="showToast('Link reset dikirim ke email kamu!','ok');return false;">Forgot password?</a>
+            </div>
+            <button class="btn-submit" id="btnLogin" onclick="doLogin()">
+                <i class="fas fa-arrow-right-to-bracket"></i> Login
+            </button>
+            <div class="divider">or</div>
+            <div class="switch-link">Belum punya akun? <a href="#" onclick="switchTab('register');return false;">Register sekarang</a></div>
+        </div>
+
+        <!-- ═══ REGISTER PANEL ═══ -->
+        <div class="auth-panel" id="panelRegister">
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <div class="input-wrap">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" class="form-input" id="regName" placeholder="John Doe" autocomplete="name">
+                </div>
+                <div class="field-msg err" id="regNameErr"><i class="fas fa-circle-exclamation"></i><span></span></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <div class="input-wrap">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" class="form-input" id="regEmail" placeholder="you@example.com" autocomplete="email">
+                </div>
+                <div class="field-msg err" id="regEmailErr"><i class="fas fa-circle-exclamation"></i><span></span></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <div class="input-wrap">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" class="form-input input-pw" id="regPassword" placeholder="Min. 8 karakter" autocomplete="new-password" oninput="checkPwStrength(this.value)">
+                    <button type="button" class="eye-btn" onclick="toggleEye('regPassword', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <!-- Strength meter -->
+                <div class="pw-strength" id="pwStrength">
+                    <div class="pw-bars">
+                        <div class="pw-bar" id="bar1"></div>
+                        <div class="pw-bar" id="bar2"></div>
+                        <div class="pw-bar" id="bar3"></div>
+                        <div class="pw-bar" id="bar4"></div>
+                    </div>
+                    <span class="pw-strength-label" id="pwLabel">—</span>
+                    <div class="pw-req" id="pwReqs">
+                        <div class="pw-req-item" id="req-len"><i class="fas fa-circle"></i> Min. 8 karakter</div>
+                        <div class="pw-req-item" id="req-upper"><i class="fas fa-circle"></i> Huruf kapital (A-Z)</div>
+                        <div class="pw-req-item" id="req-lower"><i class="fas fa-circle"></i> Huruf kecil (a-z)</div>
+                        <div class="pw-req-item" id="req-num"><i class="fas fa-circle"></i> Angka (0-9)</div>
+                        <div class="pw-req-item" id="req-sym"><i class="fas fa-circle"></i> Simbol (!@#$...)</div>
+                    </div>
+                </div>
+                <div class="field-msg err" id="regPasswordErr"><i class="fas fa-circle-exclamation"></i><span></span></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <div class="input-wrap">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" class="form-input input-pw" id="regConfirm" placeholder="Ulangi password" autocomplete="new-password">
+                    <button type="button" class="eye-btn" onclick="toggleEye('regConfirm', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <div class="field-msg err" id="regConfirmErr"><i class="fas fa-circle-exclamation"></i><span></span></div>
+            </div>
+            <button class="btn-submit" id="btnRegister" onclick="doRegister()">
+                <i class="fas fa-user-plus"></i> Buat Akun
+            </button>
+            <div class="divider">or</div>
+            <div class="switch-link">Sudah punya akun? <a href="#" onclick="switchTab('login');return false;">Login di sini</a></div>
+        </div>
+
+        <!-- ═══ VERIFY PANEL ═══ -->
+        <div class="auth-panel" id="panelVerify">
+            <div class="verify-panel">
+                <div class="verify-icon"><i class="fas fa-envelope-open-text"></i></div>
+                <div class="verify-title">Cek Email Kamu!</div>
+                <p class="verify-sub">Kode verifikasi 6 digit telah dikirim ke:</p>
+                <div class="verify-email-box" id="verifyEmailDisplay"></div>
+                <p class="verify-sub" style="margin-bottom:16px;">Masukkan kode di bawah ini untuk verifikasi akun kamu.</p>
+                <div class="otp-wrap" id="otpWrap">
+                    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                    <input class="otp-input" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                </div>
+                <div class="field-msg err" id="otpErr" style="justify-content:center;margin-bottom:12px;"><i class="fas fa-circle-exclamation"></i><span></span></div>
+                <button class="btn-submit" id="btnVerify" onclick="doVerify()" style="margin-bottom:16px;">
+                    <i class="fas fa-check-circle"></i> Verifikasi
+                </button>
+                <div style="font-size:0.73rem;color:var(--text-3);">
+                    Tidak menerima kode?
+                    <button class="resend-btn" id="resendBtn" onclick="resendOtp()">Kirim ulang</button>
+                    <span id="resendTimer" style="display:none;font-size:0.7rem;color:var(--text-3);"></span>
+                </div>
+                <p style="font-size:0.68rem;color:var(--text-3);margin-top:8px;font-family:'JetBrains Mono',monospace;">
+                    [DUMMY] Kode: <span id="dummyOtp" style="color:var(--orange);font-weight:700;"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- ═══ SUCCESS PANEL ═══ -->
+        <div class="auth-panel" id="panelSuccess">
+            <div class="success-panel">
+                <div class="success-icon"><i class="fas fa-check"></i></div>
+                <div class="verify-title">Akun Berhasil Dibuat!</div>
+                <p class="verify-sub">Email kamu sudah terverifikasi. Selamat datang di XTE API!</p>
+                <button class="btn-submit" onclick="switchTab('login');document.getElementById('authCard').style.animation='none';">
+                    <i class="fas fa-arrow-right-to-bracket"></i> Lanjut ke Login
+                </button>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+    <p>© <span id="year"></span> XTE API — All Rights Reserved. Made by <span class="footer-author">Topi</span></p>
+</footer>
+
+<!-- TOAST -->
+<div id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<script>
+// ── THEME ──
+(function() {
+    if (localStorage.getItem('xte-theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+})();
+
+function toggleTheme() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+        document.documentElement.removeAttribute('data-theme');
+        document.getElementById('themeIcon').className = 'fas fa-moon';
+        localStorage.setItem('xte-theme', 'light');
+    } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeIcon').className = 'fas fa-sun';
+        localStorage.setItem('xte-theme', 'dark');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('year').textContent = new Date().getFullYear();
+    if (localStorage.getItem('xte-theme') === 'dark') {
+        document.getElementById('themeIcon').className = 'fas fa-sun';
+    }
+    initOtp();
+});
+
+// ── TAB SWITCH ──
+function switchTab(tab) {
+    ['login','register','verify','success'].forEach(p => {
+        document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).classList.remove('active');
+    });
+    document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+    document.getElementById('tabBar').style.display = (tab === 'verify' || tab === 'success') ? 'none' : '';
+
+    const panel = document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1));
+    panel.classList.add('active');
+    clearErrors();
+}
+
+function clearErrors() {
+    document.querySelectorAll('.field-msg').forEach(el => el.classList.remove('show'));
+    document.querySelectorAll('.form-input').forEach(el => {
+        el.classList.remove('error','success');
+    });
+}
+
+// ── SHOW/HIDE PASSWORD ──
+function toggleEye(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+
+// ── PASSWORD STRENGTH ──
+function checkPwStrength(val) {
+    const strength = document.getElementById('pwStrength');
+    strength.classList.toggle('show', val.length > 0);
+    if (!val) return;
+
+    const reqs = {
+        len:   val.length >= 8,
+        upper: /[A-Z]/.test(val),
+        lower: /[a-z]/.test(val),
+        num:   /[0-9]/.test(val),
+        sym:   /[^A-Za-z0-9]/.test(val),
+    };
+
+    Object.entries(reqs).forEach(([k, met]) => {
+        const el = document.getElementById('req-' + k);
+        if (!el) return;
+        el.classList.toggle('met', met);
+        el.querySelector('i').className = met ? 'fas fa-check-circle' : 'fas fa-circle';
+    });
+
+    const score = Object.values(reqs).filter(Boolean).length;
+    const bars  = [document.getElementById('bar1'), document.getElementById('bar2'),
+                   document.getElementById('bar3'), document.getElementById('bar4')];
+    const label = document.getElementById('pwLabel');
+    bars.forEach(b => b.className = 'pw-bar');
+
+    if (score <= 2) {
+        bars[0].classList.add('fill-weak');
+        label.textContent = 'Lemah'; label.style.color = 'var(--red)';
+    } else if (score === 3) {
+        bars[0].classList.add('fill-fair'); bars[1].classList.add('fill-fair');
+        label.textContent = 'Cukup'; label.style.color = '#f59e0b';
+    } else if (score === 4) {
+        bars[0].classList.add('fill-strong'); bars[1].classList.add('fill-strong'); bars[2].classList.add('fill-strong');
+        label.textContent = 'Kuat'; label.style.color = 'var(--green)';
+    } else {
+        bars.forEach(b => b.classList.add('fill-strong'));
+        label.textContent = 'Sangat Kuat'; label.style.color = 'var(--green)';
+    }
+}
+
+// ── VALIDATION HELPERS ──
+function showErr(fieldId, msgId, msg) {
+    const field = document.getElementById(fieldId);
+    const msgEl = document.getElementById(msgId);
+    field.classList.add('error'); field.classList.remove('success');
+    msgEl.querySelector('span').textContent = msg;
+    msgEl.className = 'field-msg err show';
+    return false;
+}
+function showOk(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.classList.add('success'); field.classList.remove('error');
+}
+function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function isPwStrong(p) {
+    return p.length >= 8 && /[A-Z]/.test(p) && /[a-z]/.test(p) && /[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p);
+}
+
+// ── LOGIN ──
+async function doLogin() {
+    clearErrors();
+    const email = document.getElementById('loginEmail').value.trim();
+    const pw    = document.getElementById('loginPassword').value;
+    let ok = true;
+    if (!email)             { showErr('loginEmail', 'loginEmailErr', 'Email wajib diisi'); ok = false; }
+    else if (!isValidEmail(email)) { showErr('loginEmail', 'loginEmailErr', 'Format email tidak valid'); ok = false; }
+    else showOk('loginEmail');
+    if (!pw)  { showErr('loginPassword', 'loginPasswordErr', 'Password wajib diisi'); ok = false; }
+    else showOk('loginPassword');
+    if (!ok) return;
+
+    const btn = document.getElementById('btnLogin');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email, password: pw }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            if (data.error === 'NOT_VERIFIED') {
+                window._pendingEmail = email;
+                document.getElementById('verifyEmailDisplay').textContent = email;
+                document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+                document.getElementById('otpErr').classList.remove('show');
+                switchTab('verify');
+                startResendTimer();
+                showToast('Akun belum diverifikasi. Cek email kamu.', 'err');
+            } else {
+                showErr('loginPassword', 'loginPasswordErr', data.message || 'Login gagal');
+                showToast(data.message || 'Login gagal', 'err');
+            }
+            return;
+        }
+        localStorage.setItem('xte-token', data.token);
+        localStorage.setItem('xte-name', data.user.name);
+        localStorage.setItem('xte-email', data.user.email);
+        showToast('Login berhasil! Selamat datang 👋', 'ok');
+        const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/dashboard';
+        setTimeout(() => { window.location.href = redirectTo; }, 800);
+    } catch (err) {
+        showToast('Koneksi gagal, coba lagi', 'err');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Login';
+    }
+}
+
+// ── REGISTER ──
+async function doRegister() {
+    clearErrors();
+    const name    = document.getElementById('regName').value.trim();
+    const email   = document.getElementById('regEmail').value.trim();
+    const pw      = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirm').value;
+    let ok = true;
+
+    if (!name)  { showErr('regName', 'regNameErr', 'Nama wajib diisi'); ok = false; }
+    else showOk('regName');
+
+    if (!email)             { showErr('regEmail', 'regEmailErr', 'Email wajib diisi'); ok = false; }
+    else if (!isValidEmail(email)) { showErr('regEmail', 'regEmailErr', 'Format email tidak valid'); ok = false; }
+    else showOk('regEmail');
+
+    if (!pw)               { showErr('regPassword', 'regPasswordErr', 'Password wajib diisi'); ok = false; }
+    else if (!isPwStrong(pw)) { showErr('regPassword', 'regPasswordErr', 'Password belum memenuhi semua syarat'); ok = false; }
+    else showOk('regPassword');
+
+    if (!confirm)          { showErr('regConfirm', 'regConfirmErr', 'Konfirmasi password wajib diisi'); ok = false; }
+    else if (pw !== confirm) { showErr('regConfirm', 'regConfirmErr', 'Password tidak cocok'); ok = false; }
+    else showOk('regConfirm');
+
+    if (!ok) return;
+
+    const btn = document.getElementById('btnRegister');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftarkan...';
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password: pw }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            showToast(data.message || 'Gagal mendaftar', 'err');
+            return;
+        }
+        window._pendingEmail = email;
+        document.getElementById('verifyEmailDisplay').textContent = email;
+        document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+        document.getElementById('otpErr').classList.remove('show');
+        // Sembunyikan dummy OTP hint jika ada
+        const hint = document.getElementById('dummyOtp');
+        if (hint) hint.closest && (hint.closest('[id*="dummy"], .otp-hint') || hint.parentElement).style && (hint.textContent = '');
+        switchTab('verify');
+        startResendTimer();
+        showToast('Kode OTP telah dikirim ke ' + email, 'ok');
+    } catch (err) {
+        showToast('Koneksi gagal, coba lagi', 'err');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> Buat Akun';
+    }
+}
+
+// ── OTP ──
+function initOtp() {
+    const inputs = document.querySelectorAll('.otp-input');
+    inputs.forEach((input, idx) => {
+        input.addEventListener('input', (e) => {
+            const val = e.target.value.replace(/\D/g, '');
+            e.target.value = val;
+            e.target.classList.toggle('filled', val !== '');
+            if (val && idx < inputs.length - 1) inputs[idx + 1].focus();
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !input.value && idx > 0) inputs[idx - 1].focus();
+        });
+        input.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'').slice(0, 6);
+            paste.split('').forEach((ch, i) => {
+                if (inputs[i]) { inputs[i].value = ch; inputs[i].classList.add('filled'); }
+            });
+            if (inputs[paste.length - 1]) inputs[Math.min(paste.length, inputs.length - 1)].focus();
+        });
+    });
+}
+
+async function doVerify() {
+    const inputs = document.querySelectorAll('.otp-input');
+    const otp    = Array.from(inputs).map(i => i.value).join('');
+    const errEl  = document.getElementById('otpErr');
+    if (otp.length < 6) {
+        errEl.querySelector('span').textContent = 'Masukkan 6 digit kode';
+        errEl.className = 'field-msg err show'; return;
+    }
+    errEl.classList.remove('show');
+    const btn = document.getElementById('btnVerify');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
+    try {
+        const email = window._pendingEmail || document.getElementById('verifyEmailDisplay').textContent;
+        const res = await fetch('/api/auth/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            errEl.querySelector('span').textContent = data.message || 'Kode salah, coba lagi';
+            errEl.className = 'field-msg err show';
+            inputs.forEach(i => { i.value = ''; i.classList.remove('filled'); });
+            inputs[0].focus();
+            return;
+        }
+        switchTab('success');
+        showToast('Akun terverifikasi! Silakan login 🎉', 'ok');
+    } catch (err) {
+        showToast('Koneksi gagal, coba lagi', 'err');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> Verifikasi';
+    }
+}
+
+// ── RESEND TIMER ──
+let resendInterval;
+function startResendTimer() {
+    const btn   = document.getElementById('resendBtn');
+    const timer = document.getElementById('resendTimer');
+    btn.disabled = true; timer.style.display = 'inline';
+    let secs = 60;
+    timer.textContent = '(' + secs + 's)';
+    resendInterval = setInterval(() => {
+        secs--;
+        timer.textContent = '(' + secs + 's)';
+        if (secs <= 0) {
+            clearInterval(resendInterval);
+            btn.disabled = false;
+            timer.style.display = 'none';
+        }
+    }, 1000);
+}
+
+async function resendOtp() {
+    try {
+        const email = window._pendingEmail || document.getElementById('verifyEmailDisplay').textContent;
+        const res = await fetch('/api/auth/resend-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            showToast(data.message || 'Gagal kirim ulang OTP', 'err');
+            return;
+        }
+        document.querySelectorAll('.otp-input').forEach(i => { i.value = ''; i.classList.remove('filled'); });
+        document.getElementById('otpErr').classList.remove('show');
+        startResendTimer();
+        showToast('Kode baru telah dikirim!', 'ok');
+    } catch (err) {
+        showToast('Koneksi gagal, coba lagi', 'err');
+    }
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg, type) {
+    const toast   = document.getElementById('toast');
+    const msgEl   = document.getElementById('toastMsg');
+    const icon    = toast.querySelector('i');
+    msgEl.textContent = msg;
+    toast.className = 'show toast-' + type;
+    icon.className = type === 'ok' ? 'fas fa-check-circle' : 'fas fa-circle-exclamation';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.className = ''; }, 3000);
+}
+</script>
+</body>
+</html>
