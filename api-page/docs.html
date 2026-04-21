@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="XTE API Documentation">
+    <meta name="theme-color" content="#ffffff">
+    <title>XTE API.</title>
+    <link rel="icon" href="/src/icon.png" type="image/png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/json.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'monospace'],
+                        'sans': ['Space Grotesk', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --orange:     #e8611a;
+            --orange-dim: #fde8d8;
+            --orange-lt:  #f5905a;
+            --bg:         #f8f7f4;
+            --surface:    #ffffff;
+            --border:     #e8e4de;
+            --text:       #1c1917;
+            --text-2:     #6b6460;
+            --text-3:     #a8a29e;
+            --radius:     12px;
+            --radius-sm:  8px;
+            --shadow:     0 2px 12px rgba(232,97,26,0.10);
+            --shadow-lg:  0 8px 32px rgba(232,97,26,0.14);
+        }
+
+        [data-theme="dark"] {
+            --orange-dim: #2a1a0e;
+            --bg:         #0f0e0d;
+            --surface:    #1a1917;
+            --border:     #2e2b28;
+            --text:       #f5f0eb;
+            --text-2:     #a89e96;
+            --text-3:     #6b6460;
+            --shadow:     0 2px 12px rgba(232,97,26,0.15);
+            --shadow-lg:  0 8px 32px rgba(232,97,26,0.20);
+        }
+
+        [data-theme="dark"] .glass {
+            background: rgba(26,25,23,0.92);
+        }
+
+        [data-theme="dark"] .status-ready      { background: #0d2e1a; color: #4ade80; }
+        [data-theme="dark"] .status-deprecated { background: #2a2000; color: #facc15; }
+
+        [data-theme="dark"] .hero-card-grad {
+            background: linear-gradient(135deg, #1a1917 60%, #2a1a0e 100%) !important;
+        }
+
+        /* Theme toggle button */
+        .theme-toggle-btn {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 12px;
+            font-size: 0.8rem; font-weight: 500;
+            color: var(--text-2);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: border-color .18s, color .18s, background .18s;
+            margin-bottom: 6px;
+            width: 100%;
+        }
+        .theme-toggle-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+        .theme-toggle-btn .toggle-track {
+            width: 36px; height: 20px;
+            background: var(--border);
+            border-radius: 100px;
+            position: relative;
+            transition: background .2s;
+            flex-shrink: 0;
+        }
+        .theme-toggle-btn .toggle-track.on { background: var(--orange); }
+        .theme-toggle-btn .toggle-thumb {
+            position: absolute; top: 3px; left: 3px;
+            width: 14px; height: 14px;
+            background: #fff; border-radius: 50%;
+            transition: transform .2s;
+        }
+        .theme-toggle-btn .toggle-track.on .toggle-thumb { transform: translateX(16px); }
+
+
+        ::-webkit-scrollbar { display: none !important; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .glass {
+            backdrop-filter: blur(14px) saturate(180%);
+            background: rgba(248,247,244,0.92);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .loader {
+            width: 28px; height: 28px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--orange);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .will-fade-in { opacity: 0; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to   { opacity: 0; transform: scale(0.98); }
+        }
+        .fade-out { animation: fadeOut 0.2s ease-out forwards; }
+
+        /* ── SIDEBAR ── */
+        #sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        /* Sidebar search */
+        .sidebar-search-wrap { position: relative; margin-bottom: 14px; }
+        .sidebar-search-wrap .si {
+            position: absolute; left: 11px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-3); font-size: 17px; pointer-events: none;
+        }
+        .sidebar-search {
+            width: 100%;
+            padding: 9px 10px 9px 36px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.78rem;
+            font-family: 'Space Grotesk', sans-serif;
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: border-color .18s;
+        }
+        .sidebar-search:focus { border-color: var(--orange); }
+        .sidebar-search::placeholder { color: var(--text-3); }
+
+        /* Category group in sidebar */
+        .sb-category { margin-bottom: 8px; }
+        .sb-cat-btn {
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 12px;
+            font-size: 0.8rem; font-weight: 600;
+            color: var(--text);
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: border-color .18s, background .18s;
+            text-align: left;
+        }
+        .sb-cat-btn:hover { border-color: var(--orange); background: var(--orange-dim); }
+        .sb-cat-btn .sb-count {
+            font-size: 0.68rem; font-weight: 600;
+            color: var(--text-3); background: var(--border);
+            padding: 1px 7px; border-radius: 100px;
+            flex-shrink: 0;
+        }
+        .sb-endpoint-list { padding: 4px 0 4px 8px; display: none; }
+        .sb-endpoint-list.open { display: block; }
+        .sb-endpoint-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px;
+            font-size: 0.74rem;
+            color: var(--text-2);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: border-color .15s, color .15s, background .15s;
+            text-decoration: none;
+            margin-bottom: 2px;
+        }
+        .sb-endpoint-item:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+        .sb-endpoint-item .sb-method {
+            font-size: 0.6rem; font-weight: 700;
+            padding: 2px 6px; border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .sb-endpoint-item .sb-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
+        .method-get    { background: #1c1917; color: #fff; }
+        .method-post   { background: var(--orange); color: #fff; }
+        .method-put    { background: #d97706; color: #fff; }
+        .method-delete { background: #dc2626; color: #fff; }
+        .method-other  { background: #6b6460; color: #fff; }
+
+        /* Sidebar nav links */
+        .sb-nav-link {
+            display: flex; align-items: center;
+            padding: 9px 12px;
+            font-size: 0.8rem; font-weight: 500;
+            color: var(--text-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: border-color .18s, color .18s, background .18s;
+            margin-bottom: 6px;
+        }
+        .sb-nav-link:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+        .sb-nav-link .material-icons { font-size: 17px; margin-right: 10px; color: var(--text-3); }
+
+        /* Section label in sidebar */
+        .sb-section-label {
+            font-size: 0.6rem; font-weight: 700; letter-spacing: .1em;
+            text-transform: uppercase; color: var(--text-3);
+            padding: 8px 4px 6px;
+        }
+
+        /* Hamburger */
+        .hamburger-btn {
+            width: 38px; height: 38px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 5px; cursor: pointer;
+            transition: background .2s, border-color .2s;
+        }
+        .hamburger-btn:hover { background: var(--orange-dim); border-color: var(--orange); }
+        .hamburger-btn span {
+            display: block; width: 18px; height: 2px;
+            background: var(--text); border-radius: 2px;
+            transition: transform .3s ease, opacity .3s ease, background .2s;
+        }
+        .hamburger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); background: var(--orange); }
+        .hamburger-btn.open span:nth-child(2) { opacity: 0; }
+        .hamburger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); background: var(--orange); }
+
+        #sidebarClose {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-2);
+            transition: border-color .18s, color .18s;
+        }
+        #sidebarClose:hover { border-color: var(--orange); color: var(--orange); }
+
+        /* ── Main page cards ── */
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            transition: border-color .2s, box-shadow .2s, transform .2s;
+        }
+        .stat-card:hover { border-color: var(--orange-lt); box-shadow: var(--shadow); transform: translateY(-1px); }
+
+        .info-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .info-card:hover { border-color: var(--orange-lt); box-shadow: var(--shadow); }
+
+        .notif-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            font-size: 0.78rem;
+            transition: border-color .2s, transform .2s, box-shadow .2s;
+        }
+        .notif-card:hover { border-color: var(--orange-lt); transform: translateY(-1px); box-shadow: var(--shadow); }
+
+        /* Quick access button */
+        .quick-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: border-color .18s, background .18s, transform .18s;
+            text-decoration: none;
+        }
+        .quick-btn:hover { border-color: var(--orange); background: var(--orange-dim); transform: translateY(-1px); }
+        .quick-btn .q-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: var(--orange-dim);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .quick-btn .q-icon .material-icons { font-size: 17px; color: var(--orange); }
+
+        /* Hero */
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--orange-dim);
+            border: 1px solid rgba(232,97,26,0.2);
+            color: var(--orange);
+            font-size: 0.68rem; font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 100px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .search-wrap { position: relative; }
+        .search-wrap .search-icon {
+            position: absolute; left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-3); font-size: 18px; pointer-events: none;
+        }
+        .search-input {
+            width: 100%;
+            padding: 12px 14px 12px 44px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+            font-size: 0.83rem;
+            font-family: 'Space Grotesk', sans-serif;
+            border-radius: var(--radius);
+            outline: none;
+            transition: border-color .18s;
+        }
+        .search-input:focus { border-color: var(--orange); }
+        .search-input::placeholder { color: var(--text-3); }
+
+        /* Section title */
+        .section-title {
+            font-size: 0.62rem; font-weight: 700; letter-spacing: .1em;
+            text-transform: uppercase; color: var(--text-3);
+            margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+
+        /* Share button */
+        .share-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            font-size: 0.68rem; font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-3);
+            cursor: pointer;
+            transition: color .15s, background .15s, border-color .15s;
+        }
+        .share-btn:hover { color: var(--orange); background: var(--orange-dim); border-color: var(--orange); }
+        .share-btn .material-icons { font-size: 13px; }
+
+        /* Auth nav links */
+        .sb-auth-link {
+            display: flex; align-items: center; justify-content: center;
+            padding: 9px 12px;
+            font-size: 0.8rem; font-weight: 600;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            transition: border-color .18s, color .18s, background .18s;
+            margin-bottom: 6px;
+            cursor: pointer; border: none; width: 100%;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .sb-auth-login {
+            background: var(--orange); color: #fff;
+        }
+        .sb-auth-login:hover { filter: brightness(1.08); }
+        .sb-auth-register {
+            background: var(--bg); color: var(--text-2);
+            border: 1px solid var(--border);
+        }
+        .sb-auth-register:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+        .sb-auth-dashboard {
+            background: var(--bg); color: var(--text);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sb-auth-dashboard:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+
+        /* AOS */
+        .aos {
+            opacity: 0; transform: translateY(16px);
+            transition: opacity .55s ease, transform .55s ease;
+            transition-delay: var(--delay, 0s);
+        }
+        .aos.visible { opacity: 1; transform: translateY(0); }
+
+        /* Unread badge */
+        #unread-count {
+            background: var(--orange); color: #fff;
+            font-size: 0.65rem; font-weight: 700;
+            padding: 2px 8px; border-radius: 100px;
+        }
+
+        /* Status dot */
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+            50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0.08); }
+        }
+
+        /* Category pill */
+        .cat-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.74rem; font-weight: 500;
+            color: var(--text-2);
+            cursor: pointer;
+            transition: all .18s;
+            white-space: nowrap;
+        }
+        .cat-pill:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+        .cat-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); opacity: 0.6; }
+
+        /* Copy btn */
+        .copy-btn {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 0.68rem; font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-3);
+            cursor: pointer;
+            transition: color .15s, background .15s, border-color .15s;
+        }
+        .copy-btn:hover { color: var(--orange); background: var(--orange-dim); border-color: var(--orange); }
+        .copy-btn .material-icons { font-size: 13px; }
+
+        /* Endpoint detail stuff (in sidebar panel) */
+        .xte-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            font-size: 0.82rem;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            border-radius: var(--radius-sm);
+            outline: none;
+            transition: border-color .18s;
+        }
+        .xte-input:focus { border-color: var(--orange); }
+        .xte-input::placeholder { color: var(--text-3); }
+
+        .status-ready      { background: #dcfce7; color: #16a34a; }
+        .status-deprecated { background: #fef9c3; color: #ca8a04; }
+
+        /* Endpoint detail panel (full page overlay) */
+        #endpointPanel {
+            position: fixed; inset: 0; z-index: 200;
+            background: var(--bg);
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform .3s ease;
+        }
+        #endpointPanel.open { transform: translateX(0); }
+
+        .block-title {
+            font-size: 0.7rem; font-weight: 700;
+            color: var(--text-2);
+            margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: space-between;
+            letter-spacing: .06em; text-transform: uppercase;
+        }
+        .btn-execute {
+            background: var(--orange); color: #fff;
+            padding: 8px 20px; font-size: 0.78rem; font-weight: 600;
+            border-radius: var(--radius-sm); cursor: pointer; border: none;
+            transition: filter .18s, transform .18s, box-shadow .18s;
+        }
+        .btn-execute:hover { filter: brightness(1.08); transform: translateY(-1px); box-shadow: var(--shadow-lg); }
+        .btn-clear {
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--text-2); padding: 8px 20px;
+            font-size: 0.78rem; font-weight: 600;
+            border-radius: var(--radius-sm); cursor: pointer;
+            transition: border-color .18s, color .18s; margin-left: 8px;
+        }
+        .btn-clear:hover { border-color: var(--orange); color: var(--orange); }
+
+        .response-area {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 14px; font-size: 0.75rem;
+        }
+        .status-table th { background: var(--bg); }
+        .status-table tr:hover td { background: var(--orange-dim) !important; }
+    </style>
+</head>
+
+<body class="min-h-screen antialiased font-sans">
+
+    <!-- ══════════════ SIDEBAR ══════════════ -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-72 transform -translate-x-full duration-300 ease-in-out z-[100]">
+        <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color:var(--border);">
+            <div class="flex items-center gap-2">
+                <div style="width:26px;height:26px;background:var(--orange);border-radius:7px;display:flex;align-items:center;justify-content:center;">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="#fff"><path d="M2 8 L8 2 L14 8 L8 14 Z"/></svg>
+                </div>
+                <span class="font-bold text-sm" style="color:var(--text)">Menu</span>
+            </div>
+            <button id="sidebarClose">
+                <i class="material-icons text-xl">close</i>
+            </button>
+        </div>
+
+        <div id="sidebar-body">
+            <!-- Nav -->
+            <div class="sb-section-label">Navigation</div>
+            <a href="/" class="sb-nav-link">
+                <i class="material-icons">dashboard</i> Dashboard
+            </a>
+            <a href="https://wa.me/6282221744770" target="_blank" class="sb-nav-link">
+                <i class="material-icons">arrow_outward</i> Contact
+            </a>
+            <a href="https://whatsapp.com/channel/0029Va4K0PZ5a245NkngBA2M" target="_blank" class="sb-nav-link">
+                <i class="material-icons">arrow_outward</i> Channel
+            </a>
+
+            <!-- Auth Links -->
+            <div id="sbAuthSection"></div>
+
+            <!-- Theme Toggle -->
+            <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">
+                <div class="flex items-center gap-2">
+                    <i class="material-icons" id="themeIcon" style="font-size:17px;margin-right:0;color:var(--text-3)">dark_mode</i>
+                    <span id="themeLabel">Dark Mode</span>
+                </div>
+                <div class="toggle-track" id="toggleTrack">
+                    <div class="toggle-thumb"></div>
+                </div>
+            </button>
+
+            <!-- API Key -->
+            <div class="sb-section-label" style="margin-top:16px">API Key</div>
+            <div style="margin-bottom:14px">
+                <div style="position:relative">
+                    <input type="password" id="sidebarApiKey" placeholder="xte_xxxxxxxxxxxx"
+                        class="sidebar-search"
+                        style="padding-right:60px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;"
+                        oninput="saveApiKey(this.value)">
+                    <button onclick="toggleApiKeyVis()" style="position:absolute;right:28px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);display:flex;align-items:center;padding:0">
+                        <i class="material-icons" id="apiKeyVisIcon" style="font-size:16px">visibility_off</i>
+                    </button>
+                    <button onclick="clearApiKey()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);display:flex;align-items:center;padding:0">
+                        <i class="material-icons" style="font-size:16px">close</i>
+                    </button>
+                </div>
+                <div id="apiKeyStatus" style="font-size:0.68rem;margin-top:4px;color:var(--text-3)">Belum ada API key</div>
+            </div>
+
+            <!-- API Categories -->
+            <div class="sb-section-label" style="margin-top:16px">API Categories</div>
+            <div class="sidebar-search-wrap">
+                <span class="material-icons si">search</span>
+                <input type="text" id="sbSearch" placeholder="Search endpoints..." class="sidebar-search">
+            </div>
+            <div id="sbCategoryList">
+                <div class="flex justify-center py-6">
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 opacity-0 invisible duration-300 ease-in-out z-[90]"></div>
+
+    <!-- ══════════════ ENDPOINT DETAIL PANEL ══════════════ -->
+    <div id="endpointPanel">
+        <div class="max-w-2xl mx-auto px-6 py-6">
+            <!-- Panel header -->
+            <div class="flex items-center justify-between gap-3 mb-6">
+                <button id="panelBack" onclick="closeEndpointPanel()" class="flex items-center gap-1 text-sm font-medium" style="color:var(--text-2);background:none;border:none;cursor:pointer;">
+                    <i class="material-icons text-base">arrow_back</i> Back
+                </button>
+                <button class="share-btn" id="sharePanelBtn" onclick="shareEndpoint()">
+                    <span class="material-icons">share</span> Share
+                </button>
+            </div>
+            <div id="panelContent"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════ HEADER ══════════════ -->
+    <header class="glass sticky top-0 z-50">
+        <div class="max-w-2xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div class="flex gap-3 items-center">
+                <button id="sidebarToggle" class="hamburger-btn" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+                <div style="width:32px;height:32px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff"><path d="M2 8 L8 2 L14 8 L8 14 Z"/></svg>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                    <h2 class="text-sm font-bold leading-none" style="color:var(--text)">XTE API</h2>
+                    <p class="text-xs leading-none" style="color:var(--text-3)">API Documentation</p>
+                </div>
+                <div class="px-2.5 py-1 text-white text-xs font-bold rounded-md" style="background:var(--orange);color:#fff;font-family:'JetBrains Mono',monospace;">v1.0</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ══════════════ MAIN ══════════════ -->
+    <main class="max-w-2xl mx-auto px-6 py-10 space-y-10">
+
+        <!-- HERO -->
+        <section class="aos" style="--delay:0s">
+            <div class="info-card hero-card-grad" style="background: linear-gradient(135deg, #fff 60%, var(--orange-dim) 100%); border-color: rgba(232,97,26,0.18);">
+                <div class="flex items-start justify-between mb-4">
+                    <span class="hero-badge">
+                        <span class="status-dot"></span>
+                        All Systems Operational
+                    </span>
+                    <span class="text-xs font-mono font-bold px-2 py-1 rounded" style="background:var(--orange);color:#fff">v1.0</span>
+                </div>
+                <h1 class="text-2xl font-bold mb-2" style="color:var(--text)">XTE API</h1>
+                <p class="text-sm mb-4" style="color:var(--text-2)">Free, fast, and reliable REST API collection. Browse endpoints via the menu, or explore categories below.</p>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="openSidebar()" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg text-white transition-all" style="background:var(--orange);">
+                        <i class="material-icons text-sm">menu_book</i> Browse Endpoints
+                    </button>
+                    <a href="https://wa.me/6282221744770" target="_blank" class="inline-flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg transition-all" style="background:var(--surface);border:1px solid var(--border);color:var(--text-2);">
+                        <i class="material-icons text-sm">arrow_outward</i> Contact
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATS -->
+        <section class="aos" style="--delay:.08s">
+            <div class="section-title">Overview</div>
+            <div class="grid grid-cols-3 gap-3" id="statsGrid">
+                <div class="stat-card text-center">
+                    <div class="text-2xl font-bold mb-1" style="color:var(--orange)" id="statEndpoints">—</div>
+                    <div class="text-xs" style="color:var(--text-3)">Endpoints</div>
+                </div>
+                <div class="stat-card text-center">
+                    <div class="text-2xl font-bold mb-1" style="color:var(--orange)" id="statCategories">—</div>
+                    <div class="text-xs" style="color:var(--text-3)">Categories</div>
+                </div>
+                <div class="stat-card text-center">
+                    <div class="text-2xl font-bold mb-1" style="color:var(--orange)">Free</div>
+                    <div class="text-xs" style="color:var(--text-3)">Access</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WELCOME CARD -->
+        <section class="aos" style="--delay:.14s">
+            <div class="info-card" style="border-color:rgba(232,97,26,0.18);">
+                <div class="flex items-center gap-3 mb-2">
+                    <div style="width:36px;height:36px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="#fff"><path d="M2 8 L8 2 L14 8 L8 14 Z"/></svg>
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm" style="color:var(--text)">Selamat Datang di XTE API</div>
+                        <div class="text-xs" style="color:var(--text-3)">Free & open REST API collection</div>
+                    </div>
+                </div>
+                <p class="text-xs leading-relaxed" style="color:var(--text-2)">Explore berbagai endpoint gratis mulai dari downloader, AI, anime, hingga tools. Tap menu di kiri atas untuk mulai.</p>
+            </div>
+        </section>
+
+        <!-- CATEGORIES QUICK ACCESS -->
+        <section class="aos" style="--delay:.2s">
+            <div class="section-title">Categories</div>
+            <div id="categoryPills" class="flex flex-wrap gap-2 mb-4">
+                <div class="cat-pill opacity-50 pointer-events-none">Loading...</div>
+            </div>
+        </section>
+
+        <!-- QUICK LINKS -->
+        <section class="aos" style="--delay:.26s">
+            <div class="section-title">Quick Links</div>
+            <div class="grid grid-cols-1 gap-2">
+                <button onclick="openSidebar()" class="quick-btn">
+                    <div class="q-icon"><i class="material-icons">api</i></div>
+                    <div class="text-left">
+                        <div class="text-sm font-semibold" style="color:var(--text)">Browse API Endpoints</div>
+                        <div class="text-xs" style="color:var(--text-3)">Explore all available endpoints by category</div>
+                    </div>
+                    <i class="material-icons ml-auto text-sm" style="color:var(--text-3)">chevron_right</i>
+                </button>
+                <a href="https://wa.me/6282221744770" target="_blank" class="quick-btn">
+                    <div class="q-icon"><i class="material-icons">chat</i></div>
+                    <div class="text-left">
+                        <div class="text-sm font-semibold" style="color:var(--text)">Contact Owner</div>
+                        <div class="text-xs" style="color:var(--text-3)">Report bugs, request features via WhatsApp</div>
+                    </div>
+                    <i class="material-icons ml-auto text-sm" style="color:var(--text-3)">chevron_right</i>
+                </a>
+                <a href="https://whatsapp.com/channel/0029Va4K0PZ5a245NkngBA2M" target="_blank" class="quick-btn">
+                    <div class="q-icon"><i class="material-icons">campaign</i></div>
+                    <div class="text-left">
+                        <div class="text-sm font-semibold" style="color:var(--text)">Join Channel</div>
+                        <div class="text-xs" style="color:var(--text-3)">Get updates and announcements</div>
+                    </div>
+                    <i class="material-icons ml-auto text-sm" style="color:var(--text-3)">chevron_right</i>
+                </a>
+            </div>
+        </section>
+
+        <!-- HOW TO USE -->
+        <section class="aos" style="--delay:.32s">
+            <div class="section-title">How to Use</div>
+            <div class="info-card space-y-3">
+                <div class="flex gap-3 items-start">
+                    <div style="width:28px;height:28px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <span class="text-xs font-bold" style="color:var(--orange)">1</span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold mb-0.5" style="color:var(--text)">Buka Menu</div>
+                        <div class="text-xs" style="color:var(--text-2)">Tap ikon hamburger (☰) di kanan atas untuk buka daftar API.</div>
+                    </div>
+                </div>
+                <div class="flex gap-3 items-start">
+                    <div style="width:28px;height:28px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <span class="text-xs font-bold" style="color:var(--orange)">2</span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold mb-0.5" style="color:var(--text)">Pilih Kategori</div>
+                        <div class="text-xs" style="color:var(--text-2)">Pilih kategori lalu tap endpoint yang ingin dicoba.</div>
+                    </div>
+                </div>
+                <div class="flex gap-3 items-start">
+                    <div style="width:28px;height:28px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <span class="text-xs font-bold" style="color:var(--orange)">3</span>
+                    </div>
+                    <div>
+                        <div class="text-sm font-semibold mb-0.5" style="color:var(--text)">Execute & Copy</div>
+                        <div class="text-xs" style="color:var(--text-2)">Isi parameter, tekan Execute, lalu copy URL atau curl command.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BASE URL -->
+        <section class="aos" style="--delay:.38s">
+            <div class="section-title">Base URL</div>
+            <div class="info-card">
+                <div class="block-title">
+                    <span>Endpoint</span>
+                    <button id="copyBaseUrl" class="copy-btn" onclick="copyText(window.location.origin, 'copyBaseUrl')">
+                        <span class="material-icons">content_copy</span> Copy
+                    </button>
+                </div>
+                <pre class="bg-gray-900 text-white p-3 text-xs rounded-lg overflow-auto"><code id="baseUrlCode"></code></pre>
+                <p class="text-xs mt-3" style="color:var(--text-3)">Semua request dikirim ke base URL ini. Parameter dan path ditambahkan sesuai endpoint.</p>
+            </div>
+        </section>
+
+        <!-- HTTP STATUS CODES -->
+        <section class="aos" style="--delay:.44s">
+            <div class="section-title">HTTP Status Codes</div>
+            <div class="info-card p-0 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs status-table">
+                        <thead style="border-bottom:1px solid var(--border)">
+                            <tr>
+                                <th class="px-4 py-2 text-left font-semibold" style="color:var(--text-2)">Code</th>
+                                <th class="px-4 py-2 text-left font-semibold" style="color:var(--text-2)">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody style="color:var(--text-2)">
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-green-500 text-sm mr-2">check_circle</span><span class="font-mono font-bold text-green-600">200</span></div></td><td class="px-4 py-2">OK - Request successful</td></tr>
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">400</span></div></td><td class="px-4 py-2">Bad Request - Invalid parameters</td></tr>
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">401</span></div></td><td class="px-4 py-2">Unauthorized - Invalid API key</td></tr>
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">403</span></div></td><td class="px-4 py-2">Forbidden - No permission</td></tr>
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">404</span></div></td><td class="px-4 py-2">Not Found - Resource not found</td></tr>
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-orange-400 text-sm mr-2">warning</span><span class="font-mono font-bold text-orange-500">429</span></div></td><td class="px-4 py-2">Too Many Requests - Rate limit hit</td></tr>
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">500</span></div></td><td class="px-4 py-2">Internal Server Error</td></tr>
+                            <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">503</span></div></td><td class="px-4 py-2">Service Unavailable</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div class="text-center pb-4">
+            <p class="text-xs" style="color:var(--text-3)">© <span id="year"></span> XTE API — All Rights Reserved. Made by <span style="color:var(--orange);font-weight:600">Topi</span></p>
+        </div>
+
+    </main>
+
+    <!-- ══════════════ SCRIPTS ══════════════ -->
+    <script>
+    // ── Global state ──
+    let allApiData = {}; // { categoryName: [items...] }
+
+    // ── Sidebar toggle ──
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarClose  = document.getElementById('sidebarClose');
+    const sidebar       = document.getElementById('sidebar');
+    const overlay       = document.getElementById('overlay');
+
+    function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('opacity-0', 'invisible');
+        document.body.classList.add('overflow-hidden');
+        sidebarToggle.classList.add('open');
+    }
+    function closeSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0', 'invisible');
+        document.body.classList.remove('overflow-hidden');
+        sidebarToggle.classList.remove('open');
+    }
+    sidebarToggle.addEventListener('click', openSidebar);
+    sidebarClose.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSidebar(); closeEndpointPanel(); } });
+
+    // ── Endpoint panel ──
+    const endpointPanel = document.getElementById('endpointPanel');
+
+    function openEndpointPanel(catName, endpointIndex) {
+        const items = allApiData[catName];
+        if (!items) return;
+        const item = items[endpointIndex];
+        if (!item) return;
+
+        closeSidebar();
+
+        const slug = item.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const cat  = catName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        history.pushState({ catName, endpointIndex }, '', `?category=${cat}&endpoint=${slug}`);
+
+        const method = item.method;
+        const path   = item.path;
+        const methodClassMap = { 'GET': 'method-get', 'POST': 'method-post', 'PUT': 'method-put', 'DELETE': 'method-delete' };
+        const methodClass = methodClassMap[method] || 'method-other';
+        const statusClass = item.status === 'deprecated' ? 'status-deprecated' : 'status-ready';
+
+        const formId    = `panel-form`;
+        const respId    = `panel-response`;
+        const respConId = `panel-response-content`;
+        const clearId   = `panel-clear`;
+
+        let paramsHtml = '';
+        if (item.parameters) {
+            item.parameters.forEach(param => {
+                const schema  = param.schema || {};
+                const isReq   = !!param.required;
+                const label   = `${param.name} ${isReq ? '<span style="color:#ef4444">*</span>' : ''}`;
+                const desc    = param.description ? `<div class="text-xs mt-1" style="color:var(--text-3)">${param.description}</div>` : '';
+                const ph      = (schema.example ?? schema.default ?? '') + '';
+                if (Array.isArray(schema.enum) && schema.enum.length) {
+                    paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">${label}</label><select name="${param.name}" class="xte-input" ${isReq?'required':''}>${schema.enum.map(v=>`<option value="${v}">${v}</option>`).join('')}</select>${desc}</div>`;
+                } else if (schema.type === 'boolean') {
+                    paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">${label}</label><select name="${param.name}" class="xte-input" ${isReq?'required':''}><option value="true">true</option><option value="false">false</option></select>${desc}</div>`;
+                } else {
+                    let t = 'text'; if (schema.type==='number'||schema.type==='integer') t='number';
+                    paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">${label}</label><input type="${t}" name="${param.name}" class="xte-input" placeholder="${ph.replace(/"/g,'&quot;')}" ${isReq?'required':''}>${desc}</div>`;
+                }
+            });
+        }
+        if (item.requestBody && item.requestBody.content) {
+            const content = item.requestBody.content;
+            if (content['multipart/form-data']) {
+                const schema = content['multipart/form-data'].schema || { properties: {} };
+                const required = schema.required || [];
+                Object.keys(schema.properties || {}).forEach(propName => {
+                    const prop = schema.properties[propName] || {};
+                    const isRequired = required.includes(propName);
+                    const label = `${propName} ${isRequired ? '<span style="color:#ef4444">*</span>' : ''}`;
+                    const desc  = prop.description ? `<div class="text-xs mt-1" style="color:var(--text-3)">${prop.description}</div>` : '';
+                    const ph    = (prop.example ?? prop.default ?? '') + '';
+                    if (prop.format === 'binary') {
+                        let accept = '';
+                        if (propName.toLowerCase().includes('image')) accept = 'accept="image/*"';
+                        else if (propName.toLowerCase().includes('video')) accept = 'accept="video/*"';
+                        paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">${label}</label><input type="file" name="${propName}" ${accept} class="xte-input" ${isRequired?'required':''}>${desc}</div>`;
+                    } else if (Array.isArray(prop.enum) && prop.enum.length) {
+                        paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">${label}</label><select name="${propName}" class="xte-input" ${isRequired?'required':''}>${prop.enum.map(v=>`<option value="${v}">${v}</option>`).join('')}</select>${desc}</div>`;
+                    } else if (prop.type === 'boolean') {
+                        paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">${label}</label><select name="${propName}" class="xte-input" ${isRequired?'required':''}><option value="true">true</option><option value="false">false</option></select>${desc}</div>`;
+                    } else {
+                        let it = 'text'; if(prop.type==='number'||prop.type==='integer') it='number';
+                        paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">${label}</label><input type="${it}" name="${propName}" class="xte-input" placeholder="${ph.replace(/"/g,'&quot;')}" ${isRequired?'required':''}>${desc}</div>`;
+                    }
+                });
+            }
+            if (content['application/json']) {
+                paramsHtml += `<div><label class="block text-xs font-medium mb-1" style="color:var(--text-2)">Body (application/json)</label><textarea name="__raw_json__" rows="6" class="xte-input" style="resize:vertical;font-family:'JetBrains Mono',monospace" placeholder='{"key":"value"}'></textarea></div>`;
+            }
+        }
+
+        document.getElementById('panelContent').innerHTML = `
+            <div class="mb-4 flex items-center gap-3 flex-wrap">
+                <span class="inline-block px-3 py-1 text-xs font-bold rounded-md ${methodClass}">${method}</span>
+                <code class="text-sm font-mono font-semibold" style="color:var(--text)">${path}</code>
+                <span class="px-2 py-0.5 text-xs rounded-md ${statusClass}">${item.status}</span>
+            </div>
+            <div class="info-card mb-6">
+                <div class="text-sm font-semibold mb-1" style="color:var(--text)">${item.name}</div>
+                <div class="text-xs" style="color:var(--text-2)">${item.desc}</div>
+            </div>
+
+            ${item.status !== 'deprecated' ? `
+            <div class="info-card mb-6">
+                <div class="text-xs font-bold mb-3 flex items-center gap-1" style="color:var(--text-2)">
+                    <span class="material-icons text-sm" style="color:var(--orange)">play_arrow</span> TRY IT OUT
+                </div>
+                <form id="${formId}" onsubmit="executePanelRequest(event, '${catName}', ${endpointIndex}, '${method}', '${path}')">
+                    <div class="space-y-3 mb-4">${paramsHtml || '<p class="text-xs" style="color:var(--text-3)">No parameters required.</p>'}</div>
+                    <button type="submit" class="btn-execute">Execute</button>
+                    <button type="button" id="${clearId}" onclick="clearPanelResponse()" class="btn-clear hidden">Clear</button>
+                </form>
+            </div>
+            ` : `<div class="text-xs p-3 rounded-md mb-6" style="background:#fef9c3;color:#ca8a04;border:1px solid #fde68a">Endpoint ini sudah deprecated dan tidak digunakan lagi.</div>`}
+
+            <div id="${respId}" class="hidden mb-6">
+                <div class="text-xs font-bold mb-2 flex items-center gap-1" style="color:var(--text-2)">
+                    <span class="material-icons text-sm" style="color:var(--orange)">code</span> RESPONSE
+                </div>
+                <div id="${respConId}" class="response-area"></div>
+            </div>
+
+            <!-- HTTP Status -->
+            <div class="info-card p-0 overflow-hidden">
+                <div class="px-4 py-3 border-b text-xs font-bold flex items-center gap-1" style="border-color:var(--border);color:var(--text-2)">
+                    <span class="material-icons text-sm" style="color:var(--orange)">list</span> HTTP STATUS CODES
+                </div>
+                <table class="w-full text-xs status-table">
+                    <thead style="border-bottom:1px solid var(--border)">
+                        <tr>
+                            <th class="px-4 py-2 text-left font-semibold" style="color:var(--text-2)">Code</th>
+                            <th class="px-4 py-2 text-left font-semibold" style="color:var(--text-2)">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color:var(--text-2)">
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-green-500 text-sm mr-2">check_circle</span><span class="font-mono font-bold text-green-600">200</span></div></td><td class="px-4 py-2">OK - Request successful</td></tr>
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">400</span></div></td><td class="px-4 py-2">Bad Request</td></tr>
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">401</span></div></td><td class="px-4 py-2">Unauthorized</td></tr>
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">403</span></div></td><td class="px-4 py-2">Forbidden</td></tr>
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">404</span></div></td><td class="px-4 py-2">Not Found</td></tr>
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-orange-400 text-sm mr-2">warning</span><span class="font-mono font-bold text-orange-500">429</span></div></td><td class="px-4 py-2">Too Many Requests</td></tr>
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">500</span></div></td><td class="px-4 py-2">Internal Server Error</td></tr>
+                        <tr><td class="px-4 py-2"><div class="flex items-center"><span class="material-icons text-red-500 text-sm mr-2">error</span><span class="font-mono font-bold text-red-500">503</span></div></td><td class="px-4 py-2">Service Unavailable</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        endpointPanel.classList.add('open');
+        endpointPanel.scrollTop = 0;
+    }
+
+    function closeEndpointPanel() {
+        endpointPanel.classList.remove('open');
+        history.pushState({}, '', window.location.pathname);
+    }
+
+    async function executePanelRequest(event, catName, endpointIndex, method, path) {
+        event.preventDefault();
+        const form     = document.getElementById('panel-form');
+        const respDiv  = document.getElementById('panel-response');
+        const respCon  = document.getElementById('panel-response-content');
+        const clearBtn = document.getElementById('panel-clear');
+
+        respDiv.classList.remove('hidden');
+        const formData     = new FormData(form);
+        const fetchOptions = { method: method.toUpperCase() };
+        let fullPath = path;
+        let curlCmd  = `curl -X ${method} "${window.location.origin}${path}"`;
+
+        if (['POST','PUT','PATCH'].includes(method)) {
+            fetchOptions.body = formData;
+            for (const [k, v] of formData.entries()) {
+                curlCmd += v instanceof File && v.name ? ` -F "${k}=@${v.name}"` : ` -F "${k}=${v}"`;
+            }
+            const ak = getApiKey();
+            if (ak) { fetchOptions.headers = {'X-Api-Key': ak}; curlCmd += ` -H "X-Api-Key: ${ak}"`; }
+        } else {
+            const params = new URLSearchParams();
+            for (const [k, v] of formData.entries()) { if (typeof v==='string' && v) params.append(k, v); }
+            const ak = getApiKey();
+            if (ak) params.append('apikey', ak);
+            const qs = params.toString();
+            if (qs) fullPath += (path.includes('?') ? '&' : '?') + qs;
+            curlCmd = `curl -X ${method} "${window.location.origin}${fullPath}"`;
+        }
+
+        respCon.innerHTML = `
+            <div class="space-y-4">
+                <div>
+                    <h4 class="block-title"><span>REQUEST URL</span><button id="cpUrl" class="copy-btn" onclick="copyText('${window.location.origin}${fullPath}','cpUrl')"><span class="material-icons">content_copy</span> Copy</button></h4>
+                    <pre class="bg-gray-900 text-white p-3 text-xs overflow-auto rounded-lg"><code>${window.location.origin}${fullPath}</code></pre>
+                </div>
+                <div>
+                    <h4 class="block-title"><span>CURL</span><button id="cpCurl" class="copy-btn" onclick="copyText(\`${curlCmd.replace(/`/g,"'")}\`,'cpCurl')"><span class="material-icons">content_copy</span> Copy</button></h4>
+                    <pre class="bg-gray-900 text-white p-3 text-xs overflow-auto rounded-lg"><code>${curlCmd}</code></pre>
+                </div>
+                <div>
+                    <h4 class="block-title"><span>SERVER RESPONSE</span><button id="cpResp" class="copy-btn" onclick="copyElText('panel-resp-body','cpResp')"><span class="material-icons">content_copy</span> Copy</button></h4>
+                    <div id="panel-resp-body" class="bg-gray-900 text-white p-3 text-xs rounded-lg" style="min-height:40px"><span style="color:#a8a29e">Loading...</span></div>
+                </div>
+            </div>`;
+
+        const bodyDiv = document.getElementById('panel-resp-body');
+        try {
+            const res = await fetch(fullPath, fetchOptions);
+            const ct  = res.headers.get('content-type') || '';
+            if (!res.ok) { const t = await res.text().catch(()=>''); throw new Error(`${res.status} ${res.statusText}\n${t}`); }
+            if (ct.includes('application/json')) {
+                const data = await res.json();
+                bodyDiv.innerHTML = `<pre class="max-h-80 overflow-auto"><code class="language-json">${JSON.stringify(data, null, 2)}</code></pre>`;
+                if (window.hljs) setTimeout(() => hljs.highlightElement(bodyDiv.querySelector('code')), 0);
+            } else if (ct.startsWith('image/')) {
+                const blob = await res.blob();
+                bodyDiv.innerHTML = `<img src="${URL.createObjectURL(blob)}" class="max-w-full h-auto rounded-md">`;
+            } else {
+                bodyDiv.innerHTML = `<pre class="max-h-80 overflow-auto">${await res.text()}</pre>`;
+            }
+        } catch(err) {
+            bodyDiv.innerHTML = `<pre class="text-red-400 max-h-80 overflow-auto">${String(err)}</pre>`;
+        }
+        clearBtn.classList.remove('hidden');
+    }
+
+    function clearPanelResponse() {
+        const r = document.getElementById('panel-response');
+        const c = document.getElementById('panel-clear');
+        r.classList.add('hidden');
+        c.classList.add('hidden');
+        document.getElementById('panel-response-content').innerHTML = '';
+    }
+
+    // ── Copy helpers ──
+    async function copyText(text, btnId) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        const orig = btn.innerHTML;
+        try {
+            await navigator.clipboard.writeText(text);
+            btn.innerHTML = '<span class="material-icons" style="font-size:13px">check</span> Copied!';
+            btn.style.cssText = 'color:var(--orange);background:var(--orange-dim);border-color:var(--orange);';
+            setTimeout(() => { btn.innerHTML = orig; btn.style.cssText = ''; }, 1500);
+        } catch(e) { console.error(e); }
+    }
+    async function copyElText(elId, btnId) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        copyText(el.innerText, btnId);
+    }
+
+    // ── AOS ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const obs = new IntersectionObserver((entries, o) => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); o.unobserve(e.target); } });
+        }, { threshold: 0.08 });
+        document.querySelectorAll('.aos').forEach(el => obs.observe(el));
+    });
+
+    // ── Year ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const y = document.getElementById('year');
+        if (y) y.textContent = new Date().getFullYear();
+        const b = document.getElementById('baseUrlCode');
+        if (b) b.textContent = window.location.origin;
+    });
+
+    // ── Load Notifications ──
+    async function loadNotifications() {
+        const listEl  = document.getElementById('notifications-list');
+        const badgeEl = document.getElementById('unread-count');
+        try {
+            const res   = await fetch(`/src/notifications.json?t=${Date.now()}`);
+            let notifs  = await res.json();
+            if (!Array.isArray(notifs)) notifs = notifs ? [notifs] : [];
+            notifs.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+            listEl.innerHTML = '';
+            let unread = 0;
+            notifs.forEach((n, i) => {
+                if (!n.read) unread++;
+                const el = document.createElement('div');
+                el.className = `notif-card will-fade-in fade-in ${n.read ? 'opacity-60' : ''}`;
+                el.style.animationDelay = `${i * 50}ms`;
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-bold mb-1" style="color:var(--text)">${n.title || 'Tanpa Judul'}</p>
+                            <p style="color:var(--text-2)">${n.message || '-'}</p>
+                        </div>
+                        <div class="flex items-center ml-4 flex-shrink-0">
+                            ${!n.read ? '<div style="width:8px;height:8px;background:var(--orange);border-radius:50%;margin-right:8px"></div>' : ''}
+                            <span style="color:var(--text-3)">${n.date ? new Date(n.date).toLocaleDateString('id-ID',{year:'numeric',month:'short',day:'numeric'}) : '-'}</span>
+                        </div>
+                    </div>`;
+                listEl.appendChild(el);
+            });
+            if (unread > 0) { badgeEl.textContent = unread; badgeEl.classList.remove('hidden'); }
+            if (notifs.length === 0) listEl.innerHTML = '<p class="text-center text-xs py-4" style="color:var(--text-3)">Tidak ada notifikasi</p>';
+        } catch(e) {
+            console.error(e);
+            listEl.innerHTML = '<p class="text-xs py-4" style="color:var(--text-3)">Tidak ada pengumuman saat ini.</p>';
+        }
+    }
+
+    // ── Load API Data & populate sidebar + pills ──
+    async function loadApis() {
+        const sbList    = document.getElementById('sbCategoryList');
+        const pillsEl   = document.getElementById('categoryPills');
+        const statEP    = document.getElementById('statEndpoints');
+        const statCat   = document.getElementById('statCategories');
+
+        try {
+            const res  = await fetch('/src/openapi.json');
+            const data = await res.json();
+            const categories = {};
+
+            if (data.tags) data.tags.forEach(t => { categories[t.name] = { name: t.name, items: [] }; });
+
+            Object.keys(data.paths).forEach(path => {
+                const pathItem = data.paths[path];
+                Object.keys(pathItem).forEach(method => {
+                    const ep      = pathItem[method];
+                    const tagName = ep.tags && ep.tags.length > 0 ? ep.tags[0] : 'Uncategorized';
+                    if (!categories[tagName]) categories[tagName] = { name: tagName, items: [] };
+                    categories[tagName].items.push({
+                        path, method: method.toUpperCase(),
+                        name: ep.summary || 'No summary',
+                        desc: ep.description || 'No description',
+                        status: ep.deprecated ? 'deprecated' : 'ready',
+                        parameters: ep.parameters,
+                        requestBody: ep.requestBody
+                    });
+                });
+            });
+
+            // Store globally
+            Object.entries(categories).forEach(([catName, cat]) => {
+                allApiData[catName] = cat.items;
+            });
+
+            // Stats
+            const totalEndpoints = Object.values(categories).reduce((s, c) => s + c.items.length, 0);
+            const totalCats      = Object.values(categories).filter(c => c.items.length > 0).length;
+            if (statEP)  animateCount(statEP,  totalEndpoints);
+            if (statCat) animateCount(statCat, totalCats);
+
+            // Category pills
+            pillsEl.innerHTML = '';
+            Object.values(categories).forEach(cat => {
+                if (!cat.items.length) return;
+                const pill = document.createElement('button');
+                pill.className = 'cat-pill';
+                pill.innerHTML = `<span class="dot"></span>${cat.name} <span style="color:var(--text-3);font-size:0.7rem">(${cat.items.length})</span>`;
+                pill.onclick = () => { openSidebar(); setTimeout(() => scrollToCategory(cat.name), 320); };
+                pillsEl.appendChild(pill);
+            });
+
+            // Sidebar category list
+            sbList.innerHTML = '';
+            Object.values(categories).forEach(cat => {
+                if (!cat.items.length) return;
+                const safeId = cat.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                const catEl  = document.createElement('div');
+                catEl.className = 'sb-category';
+                catEl.setAttribute('data-cat', cat.name.toLowerCase());
+                catEl.id = `sbcat-${safeId}`;
+
+                const methodClassMap = { 'GET': 'method-get', 'POST': 'method-post', 'PUT': 'method-put', 'DELETE': 'method-delete' };
+
+                catEl.innerHTML = `
+                    <button class="sb-cat-btn" onclick="toggleSbCat('${safeId}')">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <i class="material-icons text-sm flex-shrink-0" style="color:var(--orange)">folder</i>
+                            <span class="truncate">${cat.name}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <span class="sb-count">${cat.items.length}</span>
+                            <i class="material-icons text-sm toggle-icon" style="color:var(--text-3)">expand_more</i>
+                        </div>
+                    </button>
+                    <div class="sb-endpoint-list" id="sblist-${safeId}">
+                        ${cat.items.map((item, idx) => `
+                            <div class="sb-endpoint-item" onclick="openEndpointPanel('${cat.name}', ${idx})" data-path="${item.path.toLowerCase()}" data-name="${item.name.toLowerCase()}">
+                                <span class="sb-method ${methodClassMap[item.method] || 'method-other'}">${item.method}</span>
+                                <span class="sb-path">${item.path}</span>
+                            </div>
+                        `).join('')}
+                    </div>`;
+                sbList.appendChild(catEl);
+            });
+
+        } catch(e) {
+            console.error(e);
+            sbList.innerHTML = '<p class="text-xs" style="color:#ef4444">Gagal memuat API.</p>';
+        }
+
+        restoreFromUrl();
+    }
+
+    function toggleSbCat(safeId) {
+        const list = document.getElementById(`sblist-${safeId}`);
+        const btn  = list?.previousElementSibling;
+        const icon = btn?.querySelector('.toggle-icon');
+        if (!list) return;
+        const isOpen = list.classList.toggle('open');
+        if (icon) icon.textContent = isOpen ? 'expand_less' : 'expand_more';
+    }
+
+    function scrollToCategory(catName) {
+        const safeId = catName.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+        const el = document.getElementById(`sbcat-${safeId}`);
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }
+
+    // ── Sidebar search ──
+    document.addEventListener('DOMContentLoaded', () => {
+        const sbSearch = document.getElementById('sbSearch');
+        if (!sbSearch) return;
+        sbSearch.addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.sb-category').forEach(cat => {
+                if (!q) { cat.style.display = ''; return; }
+                const catName = (cat.getAttribute('data-cat') || '').toLowerCase();
+                const items   = cat.querySelectorAll('.sb-endpoint-item');
+                let visible   = catName.includes(q) ? items.length : 0;
+                items.forEach(item => {
+                    const match = item.getAttribute('data-path')?.includes(q) || item.getAttribute('data-name')?.includes(q);
+                    item.style.display = (match || catName.includes(q)) ? '' : 'none';
+                    if (match) visible++;
+                });
+                cat.style.display = visible > 0 ? '' : 'none';
+                if (q) {
+                    const safeId = cat.id.replace('sbcat-', '');
+                    const list   = document.getElementById(`sblist-${safeId}`);
+                    const icon   = cat.querySelector('.toggle-icon');
+                    if (list && !list.classList.contains('open')) {
+                        list.classList.add('open');
+                        if (icon) icon.textContent = 'expand_less';
+                    }
+                }
+            });
+        });
+    });
+
+    // ── Count animation ──
+    function animateCount(el, target) {
+        let current = 0;
+        const step  = Math.ceil(target / 30);
+        const timer = setInterval(() => {
+            current = Math.min(current + step, target);
+            el.textContent = current;
+            if (current >= target) clearInterval(timer);
+        }, 40);
+    }
+
+    // ── URL routing restore ──
+    function restoreFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const cat    = params.get('category');
+        const ep     = params.get('endpoint');
+        if (!cat || !ep) return;
+        const catKey = Object.keys(allApiData).find(k => k.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') === cat);
+        if (!catKey) return;
+        const idx = allApiData[catKey].findIndex(item => item.name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') === ep);
+        if (idx === -1) return;
+        openEndpointPanel(catKey, idx);
+    }
+
+    window.addEventListener('popstate', () => {
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('category')) {
+            endpointPanel.classList.remove('open');
+        } else {
+            restoreFromUrl();
+        }
+    });
+
+    // ── Theme Toggle ──
+    function toggleTheme() {
+        const html = document.documentElement;
+        const isDark = html.getAttribute('data-theme') === 'dark';
+        const track  = document.getElementById('toggleTrack');
+        const label  = document.getElementById('themeLabel');
+        const icon   = document.getElementById('themeIcon');
+        const heroCard = document.querySelector('.hero-card-grad');
+
+        if (isDark) {
+            html.removeAttribute('data-theme');
+            track.classList.remove('on');
+            label.textContent = 'Dark Mode';
+            icon.textContent  = 'dark_mode';
+            localStorage.setItem('xte-theme', 'light');
+            if (heroCard) heroCard.style.background = 'linear-gradient(135deg, #fff 60%, var(--orange-dim) 100%)';
+        } else {
+            html.setAttribute('data-theme', 'dark');
+            track.classList.add('on');
+            label.textContent = 'Light Mode';
+            icon.textContent  = 'light_mode';
+            localStorage.setItem('xte-theme', 'dark');
+            if (heroCard) heroCard.style.background = 'linear-gradient(135deg, #1a1917 60%, #2a1a0e 100%)';
+        }
+    }
+
+    // Apply saved theme on load
+    (function() {
+        const saved = localStorage.getItem('xte-theme');
+        if (saved === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    })();
+
+    // ── Auth section in sidebar ──
+    function renderAuthSection() {
+        const section = document.getElementById('sbAuthSection');
+        if (!section) return;
+        const token = localStorage.getItem('xte-token');
+        let isLoggedIn = false;
+        let name = localStorage.getItem('xte-name') || 'Pengguna';
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.exp && payload.exp * 1000 > Date.now()) {
+                    isLoggedIn = true;
+                    name = payload.name || name;
+                }
+            } catch {}
+        }
+        const initial = name.trim()[0].toUpperCase();
+        if (isLoggedIn) {
+            section.innerHTML = `
+                <div class="sb-section-label" style="margin-top:12px">Akun</div>
+                <a href="/dashboard" class="sb-nav-link sb-auth-dashboard">
+                    <div style="width:22px;height:22px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;color:#fff;flex-shrink:0;">${initial}</div>
+                    <span>Dashboard — ${name.split(' ')[0]}</span>
+                </a>`;
+        } else {
+            section.innerHTML = `
+                <div class="sb-section-label" style="margin-top:12px">Akun</div>
+                <a href="/auth" class="sb-auth-link sb-auth-login">
+                    <i class="material-icons" style="font-size:17px;margin-right:6px">login</i> Login
+                </a>
+                <a href="/auth" class="sb-auth-link sb-auth-register">
+                    <i class="material-icons" style="font-size:17px;margin-right:6px">person_add</i> Register
+                </a>`;
+        }
+    }
+
+    // ── Share endpoint ──
+    function shareEndpoint() {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: 'XTE API Endpoint', url }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('sharePanelBtn');
+                if (btn) {
+                    btn.innerHTML = '<span class="material-icons">check</span> Tersalin!';
+                    btn.style.color = 'var(--green, #22c55e)';
+                    btn.style.borderColor = 'var(--green, #22c55e)';
+                    setTimeout(() => {
+                        btn.innerHTML = '<span class="material-icons">share</span> Share';
+                        btn.style.color = '';
+                        btn.style.borderColor = '';
+                    }, 2000);
+                }
+            });
+        }
+    }
+
+    // ── API Key ──
+    function getApiKey() { return localStorage.getItem('xte-apikey') || ''; }
+    function saveApiKey(v) {
+        v = v.trim();
+        const st = document.getElementById('apiKeyStatus');
+        if (v) { localStorage.setItem('xte-apikey', v); if(st) st.innerHTML = '<span style="color:#22c55e">✓ Tersimpan</span>'; }
+        else   { localStorage.removeItem('xte-apikey'); if(st) st.textContent = 'Belum ada API key'; }
+    }
+    function clearApiKey() {
+        localStorage.removeItem('xte-apikey');
+        const inp = document.getElementById('sidebarApiKey');
+        const st  = document.getElementById('apiKeyStatus');
+        if(inp) inp.value = '';
+        if(st)  st.textContent = 'Belum ada API key';
+    }
+    function toggleApiKeyVis() {
+        const inp  = document.getElementById('sidebarApiKey');
+        const icon = document.getElementById('apiKeyVisIcon');
+        if(!inp) return;
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        icon.textContent = inp.type === 'password' ? 'visibility_off' : 'visibility';
+    }
+
+    // ── Init ──
+    document.addEventListener('DOMContentLoaded', () => {
+        // Load saved API key
+        const saved = getApiKey();
+        const inp = document.getElementById('sidebarApiKey');
+        const st  = document.getElementById('apiKeyStatus');
+        if (saved && inp) { inp.value = saved; if(st) st.innerHTML = '<span style="color:#22c55e">✓ Tersimpan</span>'; }
+        loadApis();
+        renderAuthSection();
+        // Sync toggle UI with saved theme
+        const saved = localStorage.getItem('xte-theme');
+        if (saved === 'dark') {
+            const track = document.getElementById('toggleTrack');
+            const label = document.getElementById('themeLabel');
+            const icon  = document.getElementById('themeIcon');
+            if (track) track.classList.add('on');
+            if (label) label.textContent = 'Light Mode';
+            if (icon)  icon.textContent  = 'light_mode';
+            const heroCard = document.querySelector('.hero-card-grad');
+            if (heroCard) heroCard.style.background = 'linear-gradient(135deg, #1a1917 60%, #2a1a0e 100%)';
+        }
+    });
+    </script>
+</body>
+</html>
