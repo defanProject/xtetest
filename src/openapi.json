@@ -1,0 +1,1863 @@
+{
+  "openapi": "1.0.0",
+  "info": {
+    "title": "XTE API",
+    "author": "Topi",
+    "version": "v1.0.0",
+    "description": "Simple and easy to use API."
+  },
+  "servers": [
+    { "url": "https://api.xte.web.id" }
+  ],
+  "tags": [
+    { "name": "AI" },
+    { "name": "Anime" },
+    { "name": "Downloader" },
+    { "name": "Image" },
+   { "name": "News" },
+   { "name": "Search" }
+  ],
+  "paths": {
+      "/ai/copilot": {
+  "get": {
+    "summary": "Copilot Chat",
+    "description": "Kirim pertanyaan ke Copilot Microsoft dan dapatkan jawaban beserta referensi/citations",
+    "tags": ["AI"],
+    "parameters": [
+      {
+        "name": "message",
+        "in": "query",
+        "required": true,
+        "description": "Pesan atau pertanyaan yang ingin dikirim ke Copilot",
+        "schema": { "type": "string" }
+      },
+      {
+        "name": "model",
+        "in": "query",
+        "required": false,
+        "description": "Model Copilot yang digunakan (default: 'default', opsional: 'think-deeper', 'gpt-5')",
+        "schema": { "type": "string", "enum": ["default", "think-deeper", "gpt-5"], "default": "default" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan jawaban dari Copilot",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": { "type": "string", "example": "Berikut adalah berita terbaru dari Indonesia..." },
+                "citations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": { "type": "string", "example": "Detik News" },
+                      "icon": { "type": "string", "example": "https://example.com/icon.png" },
+                      "url": { "type": "string", "format": "uri", "example": "https://www.detik.com/..." }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Request invalid, message kosong",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string", "example": "Message wajib diisi" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal memproses request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string", "example": "Gagal memproses request" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/ai/claude": {
+  "get": {
+    "summary": "Claude AI Chat",
+    "description": "Berinteraksi dengan model Claude 3 Haiku",
+    "tags": ["AI"],
+    "parameters": [
+      {
+        "name": "message",
+        "in": "query",
+        "required": true,
+        "description": "Pertanyaan atau pesan yang ingin dikirim ke Claude AI",
+        "schema": {
+          "type": "string"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan respon dari Claude AI",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "result": {
+                  "type": "string",
+                  "example": "Halo! Saya adalah asisten AI. Ada yang bisa saya bantu?"
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Parameter message tidak ditemukan dalam query",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message is required"
+                }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Terjadi kesalahan pada Sistem",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "error": {
+                  "type": "string",
+                  "example": "Error fetching data from claude"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/anime/search/otakudesu": {
+  "get": {
+    "tags": ["Anime"],
+    "summary": "Otakudesu Anime Search",
+    "description": "Mencari data anime subtitle Indonesia langsung dari database Otakudesu. Output mencakup status rilis, rating, dan genre.",
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Judul anime (contoh: One Piece)",
+        "schema": { "type": "string" }
+      }
+    ],
+    "responses": {
+      "200": { "description": "Berhasil mendapatkan list anime" }
+    }
+  }
+},
+"/anime/ongoing/otakudesu": {
+  "get": {
+    "tags": ["Anime"],
+    "summary": "List Ongoing Anime on Otakudesu",
+    "description": "Mendapatkan daftar anime yang sedang tayang (ongoing) beserta jadwal rilis dan episode terbaru dari Otakudesu.",
+    "responses": {
+      "200": { "description": "Berhasil mendapatkan daftar anime ongoing" }
+    }
+  }
+},
+"/anime/download/otakudesu": {
+  "get": {
+    "tags": ["Anime"],
+    "summary": "Otakudesu Video Downloader",
+    "description": "Mendapatkan berbagai pilihan link download anime berdasarkan URL Otakudesu. Mendukung berbagai resolusi dan file host.",
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL halaman anime/episode dari Otakudesu",
+        "schema": { "type": "string", "example": "https://otakudesu.cloud/lengkap/btr-nng-sub-indo-part-1/" }
+      }
+    ],
+    "responses": {
+      "200": { "description": "Berhasil mendapatkan link download" }
+    }
+  }
+},
+"/anime/detail/otakudesu": {
+  "get": {
+    "tags": ["Anime"],
+    "summary": "Get Otakudesu Anime Detail & Episodes",
+    "description": "Mengambil informasi mendalam tentang anime (studio, score, genre) dan daftar link episode yang tersedia.",
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL detail anime dari Otakudesu",
+        "schema": { "type": "string", "example": "https://otakudesu.cloud/anime/borto-sub-indo/" }
+      }
+    ],
+    "responses": {
+      "200": { "description": "Berhasil mendapatkan detail anime" }
+    }
+  }
+},
+"/anime/waifu": {
+  "get": {
+    "summary": "Waifu",
+    "description": "Mengambil gambar waifu secara acak dari API waifu.pics.",
+    "tags": ["Anime"],
+    "parameters": [],
+    "responses": {
+      "200": {
+        "description": "Berhasil mengambil gambar waifu",
+        "content": {
+          "image/png": {
+            "schema": {
+              "type": "string",
+              "format": "binary",
+              "example": "Binary image data"
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal memproses request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string", "example": "Gagal mengambil waifu." }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+  "/download/modcombo": {
+    "get": {
+      "summary": "Download Modcombo",
+      "tags": ["Downloader"],
+      "parameters": [
+        {
+          "name": "url",
+          "in": "query",
+          "required": true,
+          "description": "URL dari hasil search",
+          "schema": { "type": "string" }
+        }
+      ],
+      "responses": {
+        "200": { "description": "Detail data dan link download" }
+      }
+    }
+  },
+"/download/twitter": {
+  "get": {
+    "summary": "Twitter Video Downloader",
+    "description": "Mengunduh video dari Twitter (X)",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL Tweet yang berisi video (misal: https://twitter.com/user/status/...)",
+        "schema": { "type": "string" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan link video",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "video": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "URL Twitter tidak disertakan",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "Twitter URL is required" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal mengambil data atau video tidak ditemukan",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/download/facebook": {
+  "get": {
+    "summary": "Facebook Downloader",
+    "description": "Mengunduh video atau reel dari Facebook dalam berbagai kualitas (HD/SD)",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL Video atau Reel Facebook",
+        "schema": { "type": "string" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan link download video",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "id": { "type": "string" },
+                    "links": { "type": "object" },
+                    "thumbnail": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "URL Facebook tidak disertakan",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "Facebook URL is required" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Server gagal memproses link atau video bersifat private",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/download/spotify": {
+  "get": {
+    "summary": "Spotify Downloader",
+    "description": "Mengunduh lagu Spotify dalam format MP3",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL Lagu Spotify (misal: https://open.spotify.com/track/...)",
+        "schema": { "type": "string" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan detail lagu dan link download",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string" },
+                    "author": { "type": "string" },
+                    "thumbnail": { "type": "string" },
+                    "duration": { "type": "string" },
+                    "url": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "URL tidak valid atau kosong",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "URL is required" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal mengambil data dari provider",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+    "/download/capcut": {
+  "get": {
+    "summary": "CapCut Downloader",
+    "description": "Ambil data dan video template dari CapCut berdasarkan URL template",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "description": "URL template CapCut yang ingin diambil datanya",
+        "required": true,
+        "schema": { "type": "string", "format": "uri" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Respon berhasil",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string", "example": "Template Name" },
+                    "description": { "type": "string", "example": "Template Description" },
+                    "thumbnail": { "type": "string", "format": "uri" },
+                    "video": { "type": "string", "format": "uri" },
+                    "author": { "type": "string", "example": "Author Name" },
+                    "avatar": { "type": "string", "format": "uri" },
+                    "duration": { "type": "number", "example": 15 },
+                    "likes": { "type": "integer", "example": 1200 },
+                    "uses": { "type": "integer", "example": 300 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": { "description": "URL tidak disertakan" },
+      "500": { "description": "Gagal memproses request" }
+    }
+  }
+},
+"/download/pinterest": {
+  "get": {
+    "summary": "Pinterest ",
+    "description": "Mengambil data dan link media (video/image) dari URL Pinterest / pin.it.",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "description": "URL Pinterest / pin.it yang ingin di-download",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "https://pin.it/lOPdveAO7"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mengambil data Pinterest",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "creator": { "type": "string", "example": "Z7:林企业" },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string", "example": "video" },
+                    "title": { "type": "string", "example": "Art" },
+                    "author": { "type": "string", "example": "ShiroAMV7" },
+                    "username": { "type": "string", "example": "shiroamv7" },
+                    "media": { "type": "string", "example": "https://v1.pinimg.com/videos/iht/expMp4/..." },
+                    "pinterest_url": { "type": "string", "example": "https://pin.it/lOPdveAO7" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "URL tidak valid",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "creator": { "type": "string", "example": "Z7:林企业" },
+                "error": { "type": "string", "example": "URL harus dari Pinterest / pin.it" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal memproses request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "creator": { "type": "string", "example": "Z7:林企业" },
+                "error": { "type": "string", "example": "Gagal memproses request" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/download/yt": {
+  "get": {
+    "tags": ["Downloader"],
+    "summary": "YouTube Downloader",
+    "description": "Mengunduh media YouTube menggunakan OceanSaver API. Mendukung konversi MP3 dan MP4 (dari 144p hingga 1080p).",
+    "parameters": [
+      { "name": "url", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Link video YouTube" },
+      { "name": "mode", "in": "query", "required": false, "schema": { "type": "string", "enum": ["mp3", "mp4"] }, "description": "Format file (default: mp3)" },
+      { "name": "type", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Kualitas (Video: 144-1080, Audio: 128)" }
+    ],
+    "responses": {
+      "200": { "description": "Data download berhasil didapatkan" }
+    }
+  }
+},
+"/download/mediafire": {
+  "get": {
+    "summary": "Mediafire Downloader",
+    "description": "Ekstrak direct download link dari URL Mediafire.",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL file Mediafire",
+        "schema": { "type": "string", "example": "https://www.mediafire.com/file/..." }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan link",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean" },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "filename": { "type": "string" },
+                    "size": { "type": "string" },
+                    "direct": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/download/ig": {
+  "get": {
+    "tags": ["Downloader"],
+    "summary": "Instagram Downloader",
+    "description": "Mengunduh Reel, Foto, atau Video dari Instagram menggunakan engine InstaSave. Menghasilkan link download direct dari CDN.",
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL Post/Reel Instagram",
+        "schema": { "type": "string", "example": "https://www.instagram.com/reel/DD6q97IuzxD/" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan link download"
+      }
+    }
+  }
+},
+    "/download/tiktok": {
+  "get": {
+    "summary": "TikTok",
+    "description": "Download video TikTok",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "description": "URL video TikTok yang ingin diunduh",
+        "required": true,
+        "schema": { "type": "string", "format": "uri" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Respon berhasil",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string", "example": "https://tikwm.com/video.mp4" },
+                    "title": { "type": "string", "example": "Judul Video TikTok" },
+                    "author": { "type": "string", "example": "Username TikTok" },
+                    "thumb": { "type": "string", "format": "uri", "example": "https://tikwm.com/thumb.jpg" },
+                    "video_sd": { "type": "string", "format": "uri", "example": "https://tikwm.com/video_sd.mp4" },
+                    "video_hd": { "type": "string", "format": "uri", "example": "https://tikwm.com/video_hd.mp4" },
+                    "music": { "type": "string", "format": "uri", "example": "https://tikwm.com/music.mp3" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": { "description": "URL tidak disertakan" },
+      "500": { "description": "Gagal memproses request" }
+    }
+  }
+},
+"/image/bluearchive": {
+      "get": {
+        "summary": "Blue Archive",
+        "description": "Blue Archive Random Images",
+        "tags": ["Image"],
+        "responses": {
+          "200": {
+            "description": "Respon berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "boolean", "example": true },
+                    "images": {
+                      "type": "array",
+                      "items": { "type": "string", "format": "uri" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Gagal memproses request" }
+        }
+      }
+    },
+        "/image/loli": {
+      "get": {
+        "summary": "loli",
+        "description": "Loli Random Images",
+        "tags": ["Image"],
+        "responses": {
+          "200": {
+            "description": "Respon berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "boolean", "example": true },
+                    "images": {
+                      "type": "array",
+                      "items": { "type": "string", "format": "uri" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": { "description": "Gagal memproses request" }
+        }
+      }
+    },
+      "/download/youporn": {
+    "get": {
+      "summary": "Get Url stream YouPo*n",
+      "tags": ["Downloader"],
+      "parameters": [
+        { "name": "url", "in": "query", "description": "URL video", "schema": { "type": "string" } },
+        { "name": "id", "in": "query", "description": "Video ID", "schema": { "type": "string" } }
+      ],
+      "responses": {
+        "200": { "description": "Success" }
+      }
+    }
+  },
+    "/download/soundcloud": {
+  "get": {
+    "summary": "SoundCloud Downloader",
+    "description": "Download lagu dari SoundCloud dalam format MP3 (192kbps).",
+    "tags": ["Downloader"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL lagu SoundCloud",
+        "schema": { "type": "string", "example": "https://soundcloud.com/..." }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean" },
+                "result": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+    "/image/mpls": {
+  "get": {
+    "summary": "Mpls Generator",
+    "description": "Membuat Twibbon dari foto user dan frame MPLS",
+    "tags": ["Image"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL foto user",
+        "schema": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Respon berhasil, mengembalikan image PNG",
+        "content": {
+          "image/png": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Missing ?url= parameter"
+      },
+      "500": {
+        "description": "Gagal memproses request"
+      }
+    }
+  }
+},
+  "/search/modcombo": {
+    "get": {
+      "summary": "Search Modcombo",
+      "tags": ["Search"],
+      "parameters": [
+        {
+          "name": "q",
+          "in": "query",
+          "required": true,
+          "schema": { "type": "string", "example": "Roblox" }
+        }
+      ],
+      "responses": {
+        "200": { "description": "List hasil pencarian" }
+      }
+    }
+  },
+  "/search/soundcloud": {
+  "get": {
+    "summary": "SoundCloud Search",
+    "description": "Mencari lagu di SoundCloud dan mendapatkan informasi detail seperti jumlah putar, likes, dan url.",
+    "tags": ["Search"],
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Judul lagu atau nama artis",
+        "schema": { "type": "string", "example": "Only We Know" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Daftar hasil pencarian SoundCloud",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean" },
+                "result": {
+                  "type": "array",
+                  "items": { "type": "object" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/search/youtube/mp3": {
+  "get": {
+    "tags": ["Search"],
+    "summary": "YouTube Search Mp3",
+    "description": "Mencari video YouTube dengan cepat menggunakan API FLVTO. Menghasilkan daftar video lengkap dengan ID, judul, durasi, dan thumbnail.",
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Kata kunci pencarian",
+        "schema": { "type": "string", "example": "Lathi Weird Genius" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan list video"
+      }
+    }
+  }
+},
+"/search/spotify": {
+  "get": {
+    "tags": ["Search"],
+    "summary": "Spotify Search & DL Link",
+    "description": "Mencari lagu di Spotify dan mendapatkan link download otomatis (Wajib API Key).",
+    "parameters": [
+      { "name": "q", "in": "query", "required": true, "description": "Judul lagu", "schema": { "type": "string", "example": "Lathi" } },
+      { "name": "apikey", "in": "query", "required": true, "description": "API Key anda", "schema": { "type": "string", "example": "topi-dev" } }
+    ],
+    "responses": {
+      "200": { "description": "Berhasil mendapatkan data" }
+    }
+  }
+},
+"/search/lahelu": {
+  "get": {
+    "summary": "Lahelu Meme Search",
+    "description": "Mencari meme (gambar/video) dari platform Lahelu berdasarkan kata kunci",
+    "tags": ["Search"],
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Kata kunci pencarian meme (misal: spongebob, kucing, puasa)",
+        "schema": { "type": "string" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan daftar meme",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": { "type": "string" },
+                      "author": { "type": "string" },
+                      "media": { "type": "string" },
+                      "post_id": { "type": "string" },
+                      "hashtags": { "type": "array", "items": { "type": "string" } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Parameter q tidak ditemukan",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "Query (q) is required" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal mengambil data dari Lahelu",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+  "/search/youporn": {
+    "get": {
+      "summary": " Youpo*n Search Video",
+      "tags": ["Search"],
+      "parameters": [
+        { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } }
+      ],
+      "responses": {
+        "200": { "description": "Success" }
+      }
+    }
+  },
+  "/search/lyrics": {
+  "get": {
+    "tags": ["Search"],
+    "summary": "Lyric Search",
+    "description": "Mencari lirik lagu terlengkap. Endpoint ini langsung memberikan data lirik.",
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "string", "example": "Sekali Seumur Hidup" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean" },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string" },
+                    "lyrics": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/search/youtube": {
+  "get": {
+    "tags": ["Search"],
+    "summary": "YouTube Search",
+    "description": "Mencari video di YouTube berdasarkan kata kunci. Memberikan informasi detail seperti videoId, durasi, jumlah views, dan info channel.",
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Kata kunci pencarian video",
+        "schema": { "type": "string", "example": "sc bot wa" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan daftar video",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean" },
+                "result": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/search/appstore": {
+  "get": {
+    "tags": ["Search"],
+    "summary": "App Store Search",
+    "description": "Mencari aplikasi di iOS App Store. Mengembalikan detail lengkap termasuk versi, rating, ukuran file (MB), hingga link trailer .m3u8 jika tersedia.",
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Nama aplikasi (contoh: WhatsApp, Instagram)",
+        "schema": { "type": "string", "example": "whatsapp" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan data aplikasi",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean" },
+                "result": { "type": "array", "items": { "type": "object" } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/search/wagroup": {
+  "get": {
+    "tags": ["Search"],
+    "summary": "WhatsApp Group Search",
+    "description": "Mencari grup WhatsApp publik berdasarkan kata kunci menggunakan Cloudscraper untuk menembus proteksi Cloudflare pada platform Groupsor.",
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Kata kunci grup (contoh: Developer, Jual Beli)",
+        "schema": { "type": "string", "example": "Developer" }
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "description": "Jumlah halaman yang ingin diambil (default 1)",
+        "schema": { "type": "integer", "example": 1 }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan daftar grup"
+      }
+    }
+  }
+},
+"/search/tiktok": {
+  "get": {
+    "summary": "TikTok Search",
+    "description": "Mencari video TikTok berdasarkan kata kunci dan jumlah hasil yang diinginkan",
+    "tags": ["Search"],
+    "parameters": [
+      {
+        "name": "q",
+        "in": "query",
+        "required": true,
+        "description": "Kata kunci pencarian (misal: jedag jedug, resep masakan)",
+        "schema": { "type": "string" }
+      },
+      {
+        "name": "total",
+        "in": "query",
+        "required": false,
+        "description": "Jumlah total video yang ingin ditampilkan",
+        "schema": { "type": "integer", "default": 5 }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan hasil pencarian",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "object",
+                  "description": "Data video dari Snaptok API"
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Query (q) tidak diisi",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "Query (q) is required" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal memproses request ke server Snaptok",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/stalk/tiktok": {
+  "get": {
+    "summary": "TikTok User Stalker",
+    "description": "Mendapatkan informasi profil TikTok, statistik followers, total likes, dan bio berdasarkan username.",
+    "tags": ["Stalker"],
+    "parameters": [
+      {
+        "name": "username",
+        "in": "query",
+        "required": true,
+        "description": "Username TikTok (tanpa @)",
+        "schema": { "type": "string", "example": "khaby.lame" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan info profil",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": { "type": "object" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "User tidak ditemukan atau API sedang limit",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/stalk/ff": {
+  "get": {
+    "summary": "Free Fire Account Stalker",
+    "description": "Mendapatkan informasi detail akun Free Fire berdasarkan Player ID (UID)",
+    "tags": ["Stalker"],
+    "parameters": [
+      {
+        "name": "uid",
+        "in": "query",
+        "required": true,
+        "description": "Player ID Free Fire (UID)",
+        "schema": { "type": "string", "example": "15421133333" }
+      },
+      {
+        "name": "region",
+        "in": "query",
+        "required": false,
+        "description": "Region akun (default: ID)",
+        "schema": { "type": "string", "default": "ID" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan data akun",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": { "type": "object" }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "UID tidak diisi",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "UID is required" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Gagal mengambil data dari server atau UID tidak ditemukan",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/tools/web2app": {
+  "get": {
+    "tags": ["Tools"],
+    "summary": "Web to App Converter",
+    "description": "Convert website menjadi aplikasi Android (APK) dan iOS secara otomatis menggunakan provider WebToNative.",
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL website yang ingin dijadikan aplikasi",
+        "schema": { "type": "string", "example": "https://xte.web.id" }
+      },
+      {
+        "name": "name",
+        "in": "query",
+        "required": true,
+        "description": "Nama aplikasi yang akan dibuat",
+        "schema": { "type": "string", "example": "XTE App" }
+      },
+      {
+        "name": "apikey",
+        "in": "query",
+        "required": true,
+        "description": "API Key anda",
+        "schema": { "type": "string", "example": "Apikey" }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil membuat request build aplikasi",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": true },
+                "result": {
+                  "type": "object",
+                  "properties": {
+                    "requestId": { "type": "string" },
+                    "appName": { "type": "string" },
+                    "website": { "type": "string" },
+                    "android": { "type": "string", "format": "uri" },
+                    "ios": { "type": "string", "format": "uri" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/tools/quotemaker": {
+  "get": {
+    "summary": "Quote Card",
+    "tags": ["Tools"],
+    "parameters": [
+      { "name": "url", "in": "query", "required": true, "schema": { "type": "string" }, "description": "URL Background/Profile" },
+      { "name": "text", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Isi kata-kata" },
+      { "name": "author", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Nama penulis" },
+      { "name": "username", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Handle @username" },
+      { "name": "accent", "in": "query", "required": false, "schema": { "type": "string", "default": "#38BDF8" }, "description": "Hex warna aksen" }
+    ],
+    "responses": {
+      "200": {
+        "description": "Premium Quote Card PNG",
+        "content": { "image/png": { "schema": { "type": "string", "format": "binary" } } }
+      }
+    }
+  }
+},
+"/tools/ssweb": {
+  "get": {
+    "summary": "Screenshot Website",
+    "description": "Mengambil screenshot website.",
+    "tags": ["Tools"],
+    "parameters": [
+      {
+        "name": "url",
+        "in": "query",
+        "required": true,
+        "description": "URL website (wajib pakai https://)",
+        "schema": { "type": "string", "example": "https://google.com" }
+      },
+      {
+        "name": "size",
+        "in": "query",
+        "required": false,
+        "description": "Pilih resolusi layar",
+        "schema": {
+          "type": "string",
+          "enum": ["desktop", "tablet", "mobile"],
+          "default": "desktop"
+        }
+      },
+      {
+        "name": "full",
+        "in": "query",
+        "required": false,
+        "description": "Screenshot seluruh halaman (long screenshot)",
+        "schema": {
+          "type": "string",
+          "enum": ["true", "false"],
+          "default": "false"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Gambar PNG berhasil dikirim",
+        "content": {
+          "image/png": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "URL tidak disertakan",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Server Error / Gagal Render",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "boolean", "example": false },
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+  "/maker/bratvid": {
+  "get": {
+    "summary": "Brat Video",
+    "description": "Bikin video singkat (MP4) dengan gaya estetik 'Brat'. Cocok buat status WA atau konten TikTok.",
+    "tags": ["Maker"],
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "required": true,
+        "description": "Teks yang mau dijadiin video",
+        "schema": {
+          "type": "string",
+          "example": "Life is brat"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan video MP4",
+        "content": {
+          "video/mp4": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      }
+    }
+  }
+},
+  "/maker/brat": {
+  "get": {
+    "summary": "Brat Foto",
+    "description": "Bikin teks dengan gaya estetik album 'Brat' Charli XCX (Background hijau, teks gepek). Output langsung berupa gambar PNG.",
+    "tags": ["Maker"],
+    "parameters": [
+      {
+        "name": "text",
+        "in": "query",
+        "required": true,
+        "description": "Teks yang mau dijadiin gambar",
+        "schema": {
+          "type": "string",
+          "example": "Topi"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil mendapatkan gambar Brat",
+        "content": {
+          "image/png": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Parameter teks tidak diisi bro!"
+      },
+      "500": {
+        "description": "Gagal mengambil data dari server sumber"
+      }
+    }
+  }
+},
+"/canvas/gay": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Presentase gay",
+    "description": "Memberikan efek filter pelangi transparan pada foto dan total Presentase gay.",
+    "parameters": [
+      {
+        "name": "nama",
+        "in": "query",
+        "description": "Nama user (Optional)",
+        "schema": { "type": "string", "example": "dika" }
+      },
+      {
+        "name": "avatar",
+        "in": "query",
+        "required": true,
+        "description": "URL foto profil yang ingin diproses",
+        "schema": { 
+          "type": "string", 
+          "example": "https://files.catbox.moe/g45kly.jpg" 
+        }
+      },
+      {
+        "name": "num",
+        "in": "query",
+        "description": "Tingkat transparansi warna pelangi (0-100)",
+        "schema": { "type": "integer", "default": 87, "example": 87 }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Berhasil menghasilkan gambar filter gay",
+        "content": {
+          "image/jpeg": {}
+        }
+      },
+      "400": { "description": "Parameter avatar tidak ada" },
+      "500": { "description": "Gagal mengambil data dari provider" }
+    }
+  }
+},
+
+"/canvas/greyscale": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Convert Image to Greyscale",
+    "description": "Mengubah gambar berwarna menjadi hitam putih (abu-abu) secara otomatis.",
+    "parameters": [
+      {
+        "name": "image",
+        "in": "query",
+        "required": true,
+        "description": "URL gambar yang mau diproses",
+        "schema": { "type": "string", "example": "https://i.ibb.co/1s8T3sY/48f7ce63c7aa.jpg" }
+      }
+    ],
+    "responses": {
+      "200": { "description": "Binary image/jpeg" }
+    }
+  }
+},
+"/canvas/goodbyev5": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Goodbye Card",
+    "description": "Generate custom goodbye card with background, avatar, and community info.",
+    "parameters": [
+      { "name": "username", "in": "query", "schema": { "type": "string", "example": "Topi" } },
+      { "name": "guildName", "in": "query", "schema": { "type": "string", "example": "Community" } },
+      { "name": "memberCount", "in": "query", "schema": { "type": "string", "example": "219" } },
+      { "name": "avatar", "in": "query", "schema": { "type": "string" } },
+      { "name": "background", "in": "query", "schema": { "type": "string" } },
+      { "name": "quality", "in": "query", "schema": { "type": "integer", "default": 90 } }
+    ],
+    "responses": {
+      "200": { "description": "Binary Image" }
+    }
+  }
+},
+"/canvas/blur": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Blur Image Effect",
+    "description": "Memberikan efek blur pada gambar. Bisa diatur tingkat keburamannya.",
+    "parameters": [
+      {
+        "name": "image",
+        "in": "query",
+        "required": true,
+        "description": "URL gambar yang ingin di-blur",
+        "schema": { "type": "string", "example": "https://i.ibb.co/9rtTrVy/download-1.jpg" }
+      },
+      {
+        "name": "level",
+        "in": "query",
+        "required": false,
+        "description": "Tingkat blur dalam pixel (default: 5)",
+        "schema": { "type": "integer", "example": 10 }
+      }
+    ],
+    "responses": {
+      "200": { "description": "Binary Image Output" }
+    }
+  }
+},
+"/canvas/darkness": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Darkness Filter",
+    "description": "Memberikan efek gelap pada gambar dengan mengatur tingkat kegelapan (amount).",
+    "parameters": [
+      {
+        "name": "image",
+        "in": "query",
+        "required": true,
+        "description": "URL gambar yang mau digelapin",
+        "schema": { "type": "string", "example": "https://i.ibb.co/9rtTrVy/download-1.jpg" }
+      },
+      {
+        "name": "amount",
+        "in": "query",
+        "required": false,
+        "description": "Tingkat kegelapan (0 - 255)",
+        "schema": { "type": "integer", "default": 50, "example": 100 }
+      }
+    ],
+    "responses": {
+      "200": { "description": "Binary Image Result" }
+    }
+  }
+},
+"/canvas/welcomev1": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Welcome Card V1",
+    "description": "Generate welcome image with avatar, guild icon, and custom background.",
+    "parameters": [
+      { "name": "username", "in": "query", "schema": { "type": "string", "example": "John" } },
+      { "name": "guildName", "in": "query", "schema": { "type": "string", "example": "Anime Club" } },
+      { "name": "guildIcon", "in": "query", "schema": { "type": "string" } },
+      { "name": "memberCount", "in": "query", "schema": { "type": "string", "example": "150" } },
+      { "name": "avatar", "in": "query", "schema": { "type": "string" } },
+      { "name": "background", "in": "query", "schema": { "type": "string" } },
+      { "name": "quality", "in": "query", "schema": { "type": "integer", "default": 80 } }
+    ],
+    "responses": { "200": { "description": "Binary Image" } }
+  }
+},
+"/canvas/welcomev2": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Welcome Card V2",
+    "description": "Generate modern welcome image with rounded-square avatar and sleek layout.",
+    "parameters": [
+      { "name": "username", "in": "query", "schema": { "type": "string", "example": "Top1dev" } },
+      { "name": "guildName", "in": "query", "schema": { "type": "string", "example": "topi" } },
+      { "name": "memberCount", "in": "query", "schema": { "type": "string", "example": "150" } },
+      { "name": "avatar", "in": "query", "schema": { "type": "string" } },
+      { "name": "background", "in": "query", "schema": { "type": "string" } }
+    ],
+    "responses": { "200": { "description": "PNG Image Output" } }
+  }
+},
+"/canvas/tweet": {
+  "get": {
+    "tags": ["Canvas"],
+    "summary": "Fake Tweet Generator",
+    "description": "Bikin gambar tweet Twitter custom dengan mode gelap/terang dan centang biru.",
+    "parameters": [
+      { "name": "displayName", "in": "query", "schema": { "type": "string", "example": "Gemini" } },
+      { "name": "username", "in": "query", "schema": { "type": "string", "example": "gemini_ai" } },
+      { "name": "comment", "in": "query", "schema": { "type": "string", "example": "Hello World!" } },
+      { "name": "avatar", "in": "query", "schema": { "type": "string" } },
+      { "name": "verified", "in": "query", "schema": { "type": "boolean", "example": true } },
+      { "name": "theme", "in": "query", "schema": { "type": "string", "enum": ["dark", "light"], "default": "dark" } }
+    ],
+    "responses": { "200": { "description": "PNG Image" } }
+  }
+},
+"/news/detik": {
+  "get": {
+    "summary": "Detik News",
+    "description": "Scraping berita terpopuler dari Detik.com",
+    "tags": ["News"],
+    "responses": {
+      "200": {
+        "description": "Respon berhasil",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "berita": {
+                    "type": "string",
+                    "example": "Judul berita terpopuler Detik"
+                  },
+                  "berita_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://news.detik.com/berita/..."
+                  },
+                  "berita_thumb": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true,
+                    "example": "https://akcdn.detik.net.id/...jpg"
+                  },
+                  "berita_diupload": {
+                    "type": "string",
+                    "example": "Senin, 25 Nov 2024 10:30 WIB"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "500": { "description": "Gagal memproses request" }
+    }
+  }
+},
+"/news/kontan": {
+  "get": {
+    "summary": "Kontan News",
+    "description": "Scraping berita terbaru dari Kontan.co.id",
+    "tags": ["News"],
+    "responses": {
+      "200": {
+        "description": "Respon berhasil",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "berita": {
+                    "type": "string",
+                    "example": "Rupiah menguat terhadap dolar AS pada perdagangan pagi ini"
+                  },
+                  "berita_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://www.kontan.co.id/news/rupiah-menguat"
+                  },
+                  "berita_thumb": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true,
+                    "example": "https://img.kontan.co.id/thumb.jpg"
+                  },
+                  "berita_jenis": {
+                    "type": "string",
+                    "example": "Makro Ekonomi"
+                  },
+                  "berita_diupload": {
+                    "type": "string",
+                    "example": "2 jam lalu"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "500": { 
+        "description": "Gagal memproses request" 
+      }
+    }
+  }
+}
+
+  }
+}
